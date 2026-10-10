@@ -4,84 +4,257 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title | default: site.title }}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
   <style>
     * { box-sizing: border-box; }
+    :root {
+      --accent: #1f8a4c;
+      --accent-dark: #156938;
+      --bg: #ffffff;
+      --text: #1b1f23;
+      --muted: #6a737d;
+      --border: #e1e4e8;
+      --surface: #f6f8fa;
+      --term-bg: #0d1117;
+      --term-text: #c9d1d9;
+    }
+    html { scroll-behavior: smooth; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      color: #24292e;
-      background: #ffffff;
+      color: var(--text);
+      background: var(--bg);
       margin: 0;
       padding: 0;
-      line-height: 1.6;
+      line-height: 1.65;
     }
     header.top {
-      border-bottom: 1px solid #e1e4e8;
+      border-bottom: 3px solid var(--accent);
       padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     header.top a {
-      color: #0366d6;
+      color: var(--accent-dark);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
+    }
+    header.top a:hover { text-decoration: underline; }
+    header.top .dot {
+      color: var(--accent);
     }
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem 2.5rem 4rem;
+      padding: 2rem 2.5rem 5rem;
     }
     h1, h2, h3, h4, h5, h6 {
       font-weight: 700;
       margin-top: 1.8em;
       margin-bottom: 0.6em;
+      scroll-margin-top: 1.5rem;
     }
-    h1 { font-size: 2.2rem; }
+    h1 {
+      font-size: 2.3rem;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 0.4rem;
+      display: inline-block;
+    }
     h2 { font-size: 1.6rem; }
     h3 { font-size: 1.3rem; }
+    h2::before { content: "# "; color: var(--accent); font-weight: 400; }
     img {
       max-width: 100%;
       height: auto;
-      border-radius: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: zoom-in;
+      transition: box-shadow 0.15s ease;
+    }
+    img:hover { box-shadow: 0 0 0 3px rgba(31,138,76,0.25); }
+
+    /* Metadaten-Liste (direkt nach H1) als Badge-Reihe */
+    main > h1 + ul {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    main > h1 + ul li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    main > h1 + ul li strong { color: var(--accent-dark); }
+
+    /* Terminal-Style Code-Bloecke */
+    .highlighter-rouge, pre.highlight, div.highlight {
+      position: relative;
     }
     pre {
-      background: #f6f8fa;
-      padding: 1rem;
+      background: var(--term-bg);
+      color: var(--term-text);
+      padding: 2.4rem 1.2rem 1.2rem;
       overflow-x: auto;
-      border-radius: 6px;
+      border-radius: 8px;
+      position: relative;
+      font-size: 0.88rem;
+    }
+    pre::before {
+      content: "● ● ●";
+      position: absolute;
+      top: 0.65rem;
+      left: 1rem;
+      letter-spacing: 4px;
+      color: #ff5f56;
+      font-size: 0.7rem;
     }
     code {
-      background: #f6f8fa;
+      background: var(--surface);
       padding: 0.15em 0.4em;
       border-radius: 4px;
-      font-size: 0.95em;
+      font-size: 0.92em;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     }
     pre code {
       background: none;
       padding: 0;
+      color: inherit;
     }
-    a { color: #0366d6; }
-    hr { border: none; border-top: 1px solid #e1e4e8; margin: 2rem 0; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #e1e4e8; padding: 0.5rem 0.8rem; text-align: left; }
+    .copy-btn {
+      position: absolute;
+      top: 0.55rem;
+      right: 0.7rem;
+      background: rgba(255,255,255,0.08);
+      color: var(--term-text);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 5px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.18); }
 
-    /* Syntax-Highlighting (Rouge) */
-    .highlight { background: #f6f8fa; }
-    .highlight .c, .highlight .c1, .highlight .cm { color: #6a737d; font-style: italic; } /* Kommentare */
-    .highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr { color: #d73a49; } /* Keywords */
-    .highlight .s, .highlight .s1, .highlight .s2, .highlight .sb { color: #032f62; } /* Strings */
-    .highlight .n, .highlight .nv, .highlight .nb { color: #24292e; } /* Namen/Variablen */
-    .highlight .nf, .highlight .nx { color: #6f42c1; } /* Funktionen */
-    .highlight .o, .highlight .ow { color: #d73a49; } /* Operatoren */
-    .highlight .m, .highlight .mi, .highlight .mf { color: #005cc5; } /* Zahlen */
-    .highlight .p { color: #24292e; } /* Interpunktion */
-    .highlight .gp { color: #6a737d; } /* Prompt-Zeichen z.B. $ */
-    .highlight .err { color: #24292e; background: none; }
+    a { color: var(--accent-dark); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
+    th { background: var(--surface); }
+
+    /* Syntax-Highlighting (Rouge) - abgestimmt auf dunklen Terminal-Hintergrund */
+    .highlight .c, .highlight .c1, .highlight .cm { color: #8b949e; font-style: italic; }
+    .highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr { color: #ff7b72; }
+    .highlight .s, .highlight .s1, .highlight .s2, .highlight .sb { color: #a5d6ff; }
+    .highlight .n, .highlight .nv, .highlight .nb { color: var(--term-text); }
+    .highlight .nf, .highlight .nx { color: #d2a8ff; }
+    .highlight .o, .highlight .ow { color: #ff7b72; }
+    .highlight .m, .highlight .mi, .highlight .mf { color: #79c0ff; }
+    .highlight .p { color: var(--term-text); }
+    .highlight .gp { color: #8b949e; }
+    .highlight .err { color: var(--term-text); background: none; }
+
+    /* Back-to-top Button */
+    #back-to-top {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #back-to-top.show { display: flex; }
+    #back-to-top:hover { background: var(--accent-dark); }
+
+    /* Lightbox */
+    #lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 2rem;
+      cursor: zoom-out;
+    }
+    #lightbox-overlay.show { display: flex; }
+    #lightbox-overlay img {
+      max-width: 95%;
+      max-height: 95%;
+      border-radius: 6px;
+      cursor: default;
+      border: none;
+    }
   </style>
 </head>
 <body>
   <header class="top">
     <a href="{{ '/' | relative_url }}">← Alle Berichte</a>
+    <span class="dot">/</span> {{ page.title | default: site.title }}
   </header>
   <main>
     {{ content }}
   </main>
+
+  <button id="back-to-top" title="Nach oben">↑</button>
+  <div id="lightbox-overlay"><img id="lightbox-img" src="" alt=""></div>
+
+  <script>
+    // Copy-Button fuer Code-Bloecke
+    document.querySelectorAll('pre').forEach(function (pre) {
+      var btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', function () {
+        var code = pre.querySelector('code');
+        var text = code ? code.innerText : pre.innerText;
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Kopiert!';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+        });
+      });
+      pre.appendChild(btn);
+    });
+
+    // Back-to-top
+    var backBtn = document.getElementById('back-to-top');
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 400) { backBtn.classList.add('show'); }
+      else { backBtn.classList.remove('show'); }
+    });
+    backBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Lightbox fuer Bilder
+    var overlay = document.getElementById('lightbox-overlay');
+    var lightboxImg = document.getElementById('lightbox-img');
+    document.querySelectorAll('main img').forEach(function (img) {
+      img.addEventListener('click', function () {
+        lightboxImg.src = img.src;
+        overlay.classList.add('show');
+      });
+    });
+    overlay.addEventListener('click', function () {
+      overlay.classList.remove('show');
+      lightboxImg.src = '';
+    });
+  </script>
 </body>
 </html>

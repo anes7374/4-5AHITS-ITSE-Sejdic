@@ -11,7 +11,6 @@ title: "Incident-Report: PHP2Shell (CVE-2026-109618 / CVE-2026-109619)"
 | **Team** | Anes Sejdic, Aldin Mukic |
 | **Klasse** | 5AHITS |
 | **Fach** | ITSE (Theorie), Incident-Briefing |
-| **Stand** | November 2026 |
 
 ---
 

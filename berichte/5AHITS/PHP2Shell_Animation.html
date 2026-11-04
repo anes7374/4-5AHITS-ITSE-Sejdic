@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PHP2Shell Schritt für Schritt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: Präsentationsbühne in drei Bändern – Angriffskette oben, Szene in der Mitte, Erklärung unten.
+   Bewusst nur ein dunkles Thema, passend zu den Folien und für den Beamer. */
+:root {
+  color-scheme: dark;
+  --bg: #0D1117;
+  --panel: #161B22;
+  --panel-2: #1C2230;
+  --line: #30363D;
+  --fg: #E6EDF3;
+  --muted: #8B949E;
+  --blue: #58A6FF;
+  --red: #F85149;
+  --yellow: #D29922;
+  --green: #3FB950;
+  --blue-soft: rgba(88,166,255,.28);
+  --red-soft: rgba(248,81,73,.30);
+  --red-strong: rgba(248,81,73,.62);
+  --yellow-soft: rgba(210,153,34,.22);
+  --green-soft: rgba(63,185,80,.22);
+  --scrim: rgba(13,17,23,.82);
+  --f-head: Cambria, "Cambria Math", Georgia, "Times New Roman", serif;
+  --f-body: Calibri, Carlito, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: Consolas, "Courier New", ui-monospace, monospace;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 16px;
+  overflow: hidden;
+}
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  padding-block: 14px 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Angriffskette */
+.chain {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: st;
+}
+.chain li {
+  counter-increment: st;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: clamp(13px, 1.15vw, 17px);
+  line-height: 1.2;
+  transition: background .4s, color .4s, border-color .4s;
+  min-width: 0;
+}
+.chain li::before {
+  content: counter(st);
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--line);
+  color: var(--fg);
+  transition: background .4s;
+}
+.chain li.done { color: var(--fg); }
+.chain li.done::before { background: var(--red-strong); }
+.chain li.active { color: var(--fg); border-color: var(--red); background: var(--red-soft); }
+.chain li.active::before { background: var(--red); }
+.chain.fixed li { color: var(--fg); border-color: var(--green); background: var(--green-soft); }
+.chain.fixed li::before { background: var(--green); content: "✓"; }
+
+/* Bühne */
+.stage {
+  position: relative;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.stage svg { width: 100%; height: 100%; display: block; }
+svg text { font-family: var(--f-body); fill: var(--fg); }
+svg .mono { font-family: var(--f-mono); }
+svg .muted { fill: var(--muted); }
+svg .head { font-family: var(--f-head); font-weight: 700; }
+.box { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+.box-2 { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; }
+
+.cell { stroke-width: 2; transition: fill .45s, stroke .45s, stroke-dasharray .2s, opacity .45s; }
+.cell.s-empty { fill: var(--panel-2); stroke: var(--line); }
+.cell.s-user  { fill: var(--blue-soft); stroke: var(--blue); }
+.cell.s-atk   { fill: var(--red-soft); stroke: var(--red); }
+.cell.s-freed { fill: transparent; stroke: var(--muted); stroke-dasharray: 5 5; }
+.cell.s-evil  { fill: var(--red-strong); stroke: var(--red); }
+.cell.s-evil.pulse { animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 50% { fill: var(--red-soft); } }
+
+.ptr { fill: none; stroke-width: 3; transition: opacity .45s, stroke .45s; }
+.ptr.k-ok { stroke: var(--blue); }
+.ptr.k-stale { stroke: var(--red); stroke-dasharray: 7 6; }
+.ptr.k-evil { stroke: var(--red); stroke-width: 4; }
+.ptr.k-hot { stroke: var(--yellow); stroke-width: 5; }
+.ptr.hidden { opacity: 0; }
+.dot { transition: fill .45s; }
+
+.memfill { transform-box: fill-box; transform-origin: left center; transition: transform 1.4s ease-out, fill .4s; }
+.memfill.k-ok { fill: var(--blue); }
+.memfill.k-atk { fill: var(--red); }
+
+.fade { transition: opacity .45s; }
+.off { opacity: 0; }
+
+.oom { animation: oom .5s ease-out 2; transform-box: fill-box; transform-origin: center; }
+@keyframes oom { 50% { transform: scale(1.06); } }
+
+.packet { animation: fly 1.5s ease-in-out forwards; }
+@keyframes fly {
+  0%   { transform: translate(var(--fx), var(--fy)); opacity: 0; }
+  12%  { opacity: 1; }
+  78%  { transform: translate(var(--tx), var(--ty)); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+}
+
+/* Overlays */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: var(--scrim);
+  transition: opacity .4s;
+  overflow: auto;
+}
+.overlay.off { opacity: 0; pointer-events: none; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: clamp(14px, 2vw, 26px);
+  width: min(100%, 980px);
+  box-sizing: border-box;
+}
+.card h3 {
+  font-family: var(--f-head);
+  font-size: clamp(20px, 2vw, 30px);
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.col { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.col h4 { margin: 0 0 8px; font-size: clamp(16px, 1.4vw, 21px); }
+.col p, .col li { font-size: clamp(14px, 1.25vw, 19px); line-height: 1.4; color: var(--fg); }
+.col p { margin: 0 0 8px; }
+.col ul { margin: 0; padding-left: 20px; }
+.col li + li { margin-top: 5px; }
+.tag-red { color: var(--red); }
+.tag-yel { color: var(--yellow); }
+.tag-grn { color: var(--green); }
+.tag-blu { color: var(--blue); }
+.mono { font-family: var(--f-mono); }
+
+.ht { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: clamp(14px, 1.3vw, 20px); }
+.ht td { padding: 10px 14px; background: var(--panel-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.ht td:first-child { border-left: 1px solid var(--line); border-radius: 8px 0 0 8px; width: 7.5em; color: var(--muted); }
+.ht td:last-child { border-right: 1px solid var(--line); border-radius: 0 8px 8px 0; }
+.ht tr.bad td { background: var(--red-soft); border-color: var(--red); }
+.ht tr.bad td:first-child { color: var(--fg); }
+.counter { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--yellow-soft); border: 1px solid var(--yellow); font-weight: 700; margin-bottom: 4px; font-size: clamp(14px, 1.3vw, 19px); }
+.arrow-note { margin: 12px 0 0; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.4; }
+
+.lane { display: flex; gap: 6px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+.lane .req { padding: 4px 9px; border-radius: 6px; font-size: 14px; font-family: var(--f-mono); }
+.req.u { background: var(--blue-soft); border: 1px solid var(--blue); }
+.req.a { background: var(--red-soft); border: 1px solid var(--red); }
+.worker-bar { height: 10px; border-radius: 99px; margin: 4px 0 10px; }
+.worker-bar.long { background: var(--red); }
+.worker-bar.short { background: repeating-linear-gradient(90deg, var(--yellow) 0 22%, transparent 22% 26%); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 18px; }
+.chip { padding: 12px 20px; border-radius: 12px; border: 2px solid var(--green); background: var(--green-soft); font-size: clamp(18px, 1.9vw, 28px); font-weight: 700; transition: opacity .4s, transform .4s; }
+.chips.off .chip { opacity: 0; transform: translateY(10px); }
+.chips .chip:nth-child(2) { transition-delay: .25s; }
+.chips .chip:nth-child(3) { transition-delay: .5s; }
+.recap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: clamp(14px, 1.3vw, 19px); color: var(--muted); }
+.recap b { color: var(--fg); font-weight: 600; }
+.recap span.sep { color: var(--red); }
+.q { text-align: center; font-family: var(--f-head); font-size: clamp(24px, 3vw, 44px); margin: 18px 0 4px; text-wrap: balance; }
+
+/* Erklärung */
+.caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-height: 7.6em;
+}
+.kicker { font-family: var(--f-mono); font-size: clamp(12px, 1vw, 15px); letter-spacing: .06em; text-transform: uppercase; color: var(--yellow); }
+.caption h2 { margin: 0; font-family: var(--f-head); font-size: clamp(22px, 2.3vw, 36px); line-height: 1.15; text-wrap: balance; }
+.caption p { margin: 0; font-size: clamp(16px, 1.45vw, 22px); line-height: 1.4; max-width: 75ch; }
+.caption .bild { color: var(--muted); font-style: italic; }
+.caption .bild b { font-style: normal; color: var(--yellow); font-weight: 600; }
+
+/* Steuerung */
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.controls button {
+  font: inherit; font-size: 15px;
+  color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer;
+}
+.controls button:hover { border-color: var(--muted); }
+.controls button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.controls button:disabled { opacity: .4; cursor: default; }
+.progress { flex: 1 1 160px; height: 6px; background: var(--panel); border-radius: 99px; overflow: hidden; min-width: 100px; }
+.progress i { display: block; height: 100%; background: var(--red); width: 0; transition: width .4s; }
+.count { font-family: var(--f-mono); color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 13px; }
+
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  body { overflow: auto; }
+  .app { height: auto; }
+  .stage { aspect-ratio: 1200 / 560; max-width: 100%; }
+  .chain { grid-template-columns: repeat(5, minmax(0,1fr)); }
+  .chain li { font-size: 0; padding: 6px; justify-content: center; }
+  .chain li::before { font-size: 13px; }
+  .overlay { position: absolute; }
+  .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; animation-iteration-count: 1 !important; }
+  .packet { animation: none; opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <ol class="chain" id="chain" aria-label="Angriffskette">
+    <li>Präparierte Anfrage</li>
+    <li>Speicher läuft voll</li>
+    <li>Aufräumen fällt aus</li>
+    <li>Alte Zeiger, neue Daten</li>
+    <li>Leck &amp; Shell</li>
+  </ol>
+
+  <div class="stage" id="stage">
+    <svg viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animation: PHP-Worker mit Merkzettel und Request-Speicher">
+      <defs>
+        <marker id="m-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#58A6FF"/></marker>
+        <marker id="m-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F85149"/></marker>
+        <marker id="m-yel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D29922"/></marker>
+      </defs>
+
+      <!-- Links: Besucher und Angreifer -->
+      <g id="dev-user">
+        <text x="120" y="72" text-anchor="middle" font-size="20" font-weight="700" fill="#58A6FF">Besucher</text>
+        <rect x="55" y="86" width="130" height="82" rx="8" fill="#161B22" stroke="#58A6FF" stroke-width="2"/>
+        <rect x="67" y="98" width="106" height="58" rx="3" fill="rgba(88,166,255,.18)"/>
+        <rect x="40" y="168" width="160" height="10" rx="4" fill="#58A6FF"/>
+      </g>
+      <g id="dev-atk">
+        <text x="120" y="322" text-anchor="middle" font-size="20" font-weight="700" fill="#F85149">Angreifer</text>
+        <rect x="55" y="336" width="130" height="82" rx="8" fill="#161B22" stroke="#F85149" stroke-width="2"/>
+        <rect x="67" y="348" width="106" height="58" rx="3" fill="rgba(248,81,73,.18)"/>
+        <text x="120" y="384" text-anchor="middle" class="mono" font-size="18" fill="#F85149">&gt;_</text>
+        <rect x="40" y="418" width="160" height="10" rx="4" fill="#F85149"/>
+      </g>
+      <text x="120" y="470" text-anchor="middle" class="muted" font-size="15">kein Login nötig</text>
+
+      <!-- Server -->
+      <rect x="270" y="14" width="665" height="532" rx="18" fill="#0D1117" stroke="#8B949E" stroke-width="2"/>
+      <text x="292" y="50" class="head" font-size="24">PHP-Worker</text>
+      <text x="430" y="50" class="muted" font-size="16">ein Prozess, viele Anfragen nacheinander</text>
+
+      <!-- Merkzettel -->
+      <rect x="292" y="70" width="262" height="262" rx="12" class="box"/>
+      <text x="310" y="100" font-size="19" font-weight="700">Merkzettel</text>
+      <text x="413" y="100" class="muted" font-size="15">(globale Zeiger)</text>
+      <g id="rows"></g>
+
+      <!-- Aufräum-Checkliste -->
+      <rect x="292" y="346" width="262" height="130" rx="12" class="box"/>
+      <text x="310" y="374" font-size="19" font-weight="700">Aufräumen am Ende</text>
+      <g id="check"></g>
+
+      <!-- Speicher -->
+      <rect x="578" y="70" width="337" height="396" rx="12" class="box"/>
+      <text x="596" y="100" font-size="19" font-weight="700">Request-Speicher</text>
+      <g id="cells"></g>
+      <g font-size="13">
+        <rect x="598" y="442" width="12" height="12" fill="rgba(88,166,255,.28)" stroke="#58A6FF"/><text x="615" y="453">Besucher</text>
+        <rect x="684" y="442" width="12" height="12" fill="rgba(248,81,73,.62)" stroke="#F85149"/><text x="701" y="453">Angreifer</text>
+        <rect x="772" y="442" width="12" height="12" fill="none" stroke="#8B949E" stroke-dasharray="3 3"/><text x="789" y="453">freigegeben</text>
+      </g>
+
+      <!-- Speicherbalken -->
+      <text x="292" y="494" class="muted" font-size="15">Speicherverbrauch</text>
+      <rect x="292" y="502" width="623" height="22" rx="6" fill="#1C2230" stroke="#30363D"/>
+      <rect id="memfill" x="292" y="502" width="623" height="22" rx="6" class="memfill k-ok" style="transform: scaleX(0)"/>
+      <text x="912" y="494" text-anchor="end" class="mono muted" font-size="14">memory_limit</text>
+
+      <!-- Zeiger -->
+      <g id="ptrs"></g>
+
+      <!-- OOM-Hinweis -->
+      <g id="oom" class="fade off">
+        <rect x="604" y="214" width="286" height="96" rx="12" fill="#0D1117" stroke="#F85149" stroke-width="3"/>
+        <text x="747" y="252" text-anchor="middle" font-size="22" font-weight="700" fill="#F85149">Speicher voll!</text>
+        <text x="747" y="284" text-anchor="middle" class="mono" font-size="16">longjmp → direkt ans Ende</text>
+      </g>
+
+      <!-- Rechts: Ergebnis -->
+      <rect x="958" y="14" width="228" height="532" rx="18" class="box"/>
+      <text x="976" y="50" class="head" font-size="22">Was raus geht</text>
+      <g id="res-none" class="fade">
+        <text x="1072" y="270" text-anchor="middle" class="muted" font-size="16">noch nichts</text>
+      </g>
+      <g id="res-ok" class="fade off">
+        <rect x="976" y="80" width="192" height="80" rx="10" fill="rgba(88,166,255,.18)" stroke="#58A6FF" stroke-width="2"/>
+        <text x="1072" y="112" text-anchor="middle" font-size="18" font-weight="700">Normale Antwort</text>
+        <text x="1072" y="140" text-anchor="middle" class="muted" font-size="15">an den Besucher</text>
+      </g>
+      <g id="res-leak" class="fade off">
+        <rect x="976" y="80" width="192" height="200" rx="10" fill="rgba(210,153,34,.15)" stroke="#D29922" stroke-width="2"/>
+        <text x="990" y="108" font-size="17" font-weight="700" fill="#D29922">Antwort-Cookie</text>
+        <text x="990" y="136" class="mono" font-size="13">Set-Cookie:</text>
+        <text x="990" y="156" class="mono" font-size="13">PHPSESSID=%8f%a1</text>
+        <text x="990" y="176" class="mono" font-size="13">%7f%00%55%3c%e2…</text>
+        <text x="990" y="210" font-size="15">enthält fremden Speicher:</text>
+        <text x="990" y="234" font-size="15">• Tokens, Passwörter</text>
+        <text x="990" y="258" font-size="15">• Speicheradressen</text>
+      </g>
+      <g id="res-shell" class="fade off">
+        <rect x="976" y="300" width="192" height="150" rx="10" fill="#010409" stroke="#3FB950" stroke-width="2"/>
+        <text x="990" y="328" class="mono" font-size="14" fill="#3FB950">$ id</text>
+        <text x="990" y="350" class="mono" font-size="13">uid=33(www-data)</text>
+        <text x="990" y="378" class="mono" font-size="14" fill="#3FB950">$ whoami</text>
+        <text x="990" y="400" class="mono" font-size="13">www-data</text>
+        <text x="990" y="428" class="mono" font-size="14" fill="#3FB950">$ ▌</text>
+        <text x="1072" y="478" text-anchor="middle" class="muted" font-size="13">Exakter Weg zur Codeausführung</text>
+        <text x="1072" y="496" text-anchor="middle" class="muted" font-size="13">nicht öffentlich beschrieben</text>
+      </g>
+
+      <!-- Pakete -->
+      <g id="packets"></g>
+    </svg>
+
+    <!-- Overlay: Lücke A -->
+    <div class="overlay off" id="ov-table" aria-hidden="true">
+      <div class="card">
+        <h3>Tabelle der Formularfelder im Moment des Abbruchs</h3>
+        <span class="counter">Zähler: 3 Einträge</span>
+        <table class="ht">
+          <tr><td>Fach 1</td><td class="mono">name = "max"</td></tr>
+          <tr><td>Fach 2</td><td class="mono">datei = "bild.png"</td></tr>
+          <tr class="bad"><td>Fach 3</td><td><b>nie geschrieben</b>: Speicher ging aus, bevor der Eintrag fertig war. Dort liegen noch Reste, die der Angreifer platziert hat.</td></tr>
+        </table>
+        <p class="arrow-note">→ Beim Abbau am Ende glaubt PHP dem Zähler, behandelt Fach 3 wie einen echten Wert und übergibt die Angreifer-Daten an seine Aufräum-Funktionen. <b class="tag-red">Speicherkorruption.</b></p>
+      </div>
+    </div>
+
+    <!-- Overlay: mod_php -->
+    <div class="overlay off" id="ov-mod" aria-hidden="true">
+      <div class="card">
+        <h3>Wie lange lebt ein Worker?</h3>
+        <div class="cols">
+          <div class="col">
+            <h4 class="tag-red">Apache + mod_php: höchstes Risiko</h4>
+            <div class="lane"><span class="req a">Angriff</span><span class="req u">Anfrage 2</span><span class="req u">Anfrage 3</span><span class="req u">…</span></div>
+            <div class="worker-bar long"></div>
+            <p>Ein Prozess bearbeitet sehr viele Anfragen hintereinander. Liegengebliebene Zeiger erreichen die nächste Anfrage. Fast jede PHP-Seite reicht als Ziel.</p>
+          </div>
+          <div class="col">
+            <h4 class="tag-yel">PHP-FPM, php-cgi, LiteSpeed, FrankenPHP</h4>
+            <div class="lane"><span class="req a">Angriff</span><span class="req u">Anfrage 2</span><span class="req u">Anfrage 3</span></div>
+            <div class="worker-bar short"></div>
+            <p>Bricht der Start einer Anfrage ab, wird der Prozess bei FPM oft beendet. Das Risiko ist kleiner, aber nicht null. Patchen müssen alle.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay: Fix -->
+    <div class="overlay off" id="ov-fix" aria-hidden="true">
+      <div class="card">
+        <h3>Der Fix vom 21. Oktober 2026</h3>
+        <div class="cols">
+          <div class="col">
+            <h4 class="tag-grn">Was PHP geändert hat</h4>
+            <ul>
+              <li>Kein harter Sprung mehr: Bei Speichermangel stoppt PHP erst an einem sicheren Punkt.</li>
+              <li>Alle Merkzettel werden beim Ende und beim Start einer Anfrage zurückgesetzt.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h4 class="tag-blu">Was Admins tun müssen</h4>
+            <ul>
+              <li>Update auf <span class="mono">8.2.35 · 8.3.36 · 8.4.27 · 8.5.12</span></li>
+              <li>Danach alle PHP-Worker neu starten</li>
+              <li>Passwörter, Tokens und API-Keys tauschen</li>
+              <li>Logs ab Mitte Oktober prüfen</li>
+            </ul>
+          </div>
+        </div>
+        <p class="arrow-note"><b class="tag-yel">Achtung:</b> Einstellungen ändern ist kein Ersatz. <span class="mono">session.upload_progress</span> abzuschalten sperrt nur einen von mehreren Wegen.</p>
+      </div>
+    </div>
+
+    <!-- Overlay: Zusammenfassung -->
+    <div class="overlay off" id="ov-sum" aria-hidden="true">
+      <div class="card">
+        <div class="recap">
+          <b>Präparierte Anfrage</b><span class="sep">→</span><b>Speicher voll</b><span class="sep">→</span><b>Aufräumen fällt aus</b><span class="sep">→</span><b>alte Zeiger, neue Daten</b><span class="sep">→</span><b>Leck &amp; Shell</b>
+        </div>
+        <p class="q">Was braucht der Angreifer <span class="tag-red">nicht</span>?</p>
+        <div class="chips off" id="chips">
+          <span class="chip">Kein Login</span>
+          <span class="chip">Keine Lücke in der Website</span>
+          <span class="chip">Kein Upload-Formular</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption" aria-live="polite">
+    <span class="kicker" id="kicker"></span>
+    <h2 id="title"></h2>
+    <p id="text"></p>
+    <p class="bild" id="bild"></p>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="prev" aria-label="Zurück">← Zurück</button>
+    <button type="button" id="next" aria-label="Weiter">Weiter →</button>
+    <span class="count" id="count"></span>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+    <button type="button" id="fs">Vollbild (F)</button>
+    <span class="hint">Pfeiltasten, Leertaste oder Presenter</span>
+    <span class="hint">Anes Sejdic &amp; Aldin Mukic · erstellt mit KI-Unterstützung (Claude, Opus 5.5)</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function txt(parent, x, y, s, attrs) {
+    var a = { x: x, y: y };
+    for (var k in attrs) a[k] = attrs[k];
+    var t = el("text", a, parent);
+    t.textContent = s;
+    return t;
+  }
+
+  // Merkzettel-Zeilen
+  var ROWS = [
+    { key: "sid", y: 140, code: "PS(id)", label: "Session-ID" },
+    { key: "uns", y: 206, code: "BG(unserialize)", label: "Unserializer" },
+    { key: "bt",  y: 272, code: "EG(…backtrace)", label: "Fehler-Backtrace" }
+  ];
+  var rowsG = document.getElementById("rows");
+  var dots = {};
+  ROWS.forEach(function (r) {
+    el("rect", { x: 308, y: r.y - 24, width: 230, height: 48, rx: 8, "class": "box-2" }, rowsG);
+    txt(rowsG, 322, r.y - 3, r.code, { "class": "mono", "font-size": 15 });
+    txt(rowsG, 322, r.y + 16, r.label, { "class": "muted", "font-size": 14 });
+    dots[r.key] = el("circle", { cx: 524, cy: r.y, r: 7, fill: "#30363D", "class": "dot" }, rowsG);
+  });
+
+  // Checkliste
+  var checkG = document.getElementById("check");
+  var CHECK_ITEMS = ["1. Merkzettel löschen", "2. Speicher freigeben"];
+  var checkMarks = [];
+  CHECK_ITEMS.forEach(function (s, i) {
+    var y = 404 + i * 28;
+    el("rect", { x: 310, y: y - 16, width: 20, height: 20, rx: 4, fill: "none", stroke: "#8B949E", "stroke-width": 2 }, checkG);
+    var m = txt(checkG, 320, y + 1, "", { "text-anchor": "middle", "font-size": 18, "font-weight": 700 });
+    checkMarks.push(m);
+    txt(checkG, 340, y + 1, s, { "font-size": 16 });
+  });
+  var strike = el("line", { x1: 336, y1: 0, x2: 500, y2: 0, stroke: "#F85149", "stroke-width": 3, "class": "fade off" }, checkG);
+  var strike2 = el("line", { x1: 336, y1: 0, x2: 500, y2: 0, stroke: "#F85149", "stroke-width": 3, "class": "fade off" }, checkG);
+  strike.setAttribute("y1", 398); strike.setAttribute("y2", 398);
+  strike2.setAttribute("y1", 426); strike2.setAttribute("y2", 426);
+  var stamp = txt(checkG, 310, 462, "", { "font-size": 15, "font-weight": 700, "class": "mono" });
+
+  // Speicherzellen 4 x 5
+  var cellsG = document.getElementById("cells");
+  var cells = [];
+  function cellPos(i) {
+    var c = i % 4, r = Math.floor(i / 4);
+    return { x: 598 + c * 76, y: 116 + r * 62, w: 64, h: 50 };
+  }
+  for (var i = 0; i < 20; i++) {
+    var p = cellPos(i);
+    cells.push(el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: 6, "class": "cell s-empty" }, cellsG));
+  }
+
+  // Zeiger
+  var ptrG = document.getElementById("ptrs");
+  var ptrs = {};
+  ROWS.forEach(function (r) {
+    ptrs[r.key] = el("path", { "class": "ptr hidden", d: "M531," + r.y + " L531," + r.y }, ptrG);
+  });
+  function ptrPath(row, cellIndex) {
+    var p = cellPos(cellIndex);
+    var tx = p.x + p.w / 2, ty = p.y + p.h / 2;
+    var sx = 531, sy = row.y;
+    return "M" + sx + "," + sy + " C" + (sx + 70) + "," + sy + " " + (tx - 80) + "," + ty + " " + (tx - 6) + "," + ty;
+  }
+  var TARGET = { sid: 4, uns: 9, bt: 12 };
+
+  var memfill = document.getElementById("memfill");
+  var oom = document.getElementById("oom");
+  var packetsG = document.getElementById("packets");
+  var res = {
+    none: document.getElementById("res-none"),
+    ok: document.getElementById("res-ok"),
+    leak: document.getElementById("res-leak"),
+    shell: document.getElementById("res-shell")
+  };
+  var overlays = {
+    table: document.getElementById("ov-table"),
+    mod: document.getElementById("ov-mod"),
+    fix: document.getElementById("ov-fix"),
+    sum: document.getElementById("ov-sum")
+  };
+  var chips = document.getElementById("chips");
+  var chainLis = document.querySelectorAll("#chain li");
+  var chain = document.getElementById("chain");
+
+  function packet(kind, label, dir) {
+    // kind: user | atk ; dir: in | out
+    var lane = kind === "user" ? 196 : 446;
+    var color = kind === "user" ? "#58A6FF" : "#F85149";
+    var fill = kind === "user" ? "rgba(88,166,255,.25)" : "rgba(248,81,73,.35)";
+    var w = Math.max(150, label.length * 8.6 + 24);
+    var g = el("g", { "class": "packet" }, packetsG);
+    el("rect", { x: 0, y: -18, width: w, height: 36, rx: 8, fill: fill, stroke: color, "stroke-width": 2 }, g);
+    txt(g, w / 2, 6, label, { "text-anchor": "middle", "font-size": 15, "font-weight": 700, "class": "mono" });
+    var fromX = dir === "in" ? 40 : 330, toX = dir === "in" ? 330 : 40;
+    g.style.setProperty("--fx", fromX + "px");
+    g.style.setProperty("--fy", lane + "px");
+    g.style.setProperty("--tx", toX + "px");
+    g.style.setProperty("--ty", lane + "px");
+    g.style.transform = "translate(" + toX + "px," + lane + "px)";
+  }
+
+  // ---------- Zustände ----------
+  function base() {
+    return {
+      cells: new Array(20).fill("empty"),
+      ptr: {}, // key -> kind
+      mem: 0, memKind: "ok",
+      check: "idle",
+      oom: false,
+      res: "none",
+      overlay: null,
+      chain: -1,
+      fixed: false,
+      packets: [],
+      pulse: false,
+      hot: null,
+      chips: false
+    };
+  }
+  function fill(arr, from, to, v) { for (var i = from; i <= to; i++) arr[i] = v; return arr; }
+
+  var STEPS = [
+    {
+      kicker: "Einführung",
+      title: "Wie aus einer Anfrage eine Shell wird",
+      text: "Links schicken ein Besucher und ein Angreifer Anfragen. In der Mitte arbeitet ein PHP-Worker: ein Prozess, der viele Anfragen nacheinander bearbeitet. Er hat einen Merkzettel und für jede Anfrage einen Speicherbereich.",
+      bild: "Stellt euch den Worker als Hotel vor: Anfragen sind Gäste, der Speicher sind die Zimmer, der Merkzettel ist das Buch an der Rezeption.",
+      state: function (s) { return s; }
+    },
+    {
+      kicker: "Normalfall · 1 von 2",
+      title: "Eine normale Anfrage kommt an",
+      text: "PHP legt im Speicher an, was die Anfrage braucht, und notiert sich auf dem Merkzettel, wo es liegt, zum Beispiel die Session-ID.",
+      bild: "Ein Gast checkt ein. Die Rezeption schreibt ins Buch: Gast Müller, Zimmer 5.",
+      state: function (s) {
+        fill(s.cells, 0, 9, "user");
+        s.ptr = { sid: "ok", uns: "ok" };
+        s.mem = 0.32;
+        s.packets = [["user", "GET /index.php", "in"]];
+        return s;
+      }
+    },
+    {
+      kicker: "Normalfall · 2 von 2",
+      title: "Am Ende wird sauber aufgeräumt",
+      text: "Die Antwort geht raus. Dann löscht PHP die Einträge auf dem Merkzettel und gibt den Speicher frei. Die nächste Anfrage startet mit leerem Zettel.",
+      bild: "Beim Check-out wird erst der Eintrag im Buch gestrichen, dann wird das Zimmer geputzt.",
+      state: function (s) {
+        s.check = "done";
+        s.res = "ok";
+        s.packets = [["user", "200 OK", "out"]];
+        return s;
+      }
+    },
+    {
+      kicker: "Angriff · Schritt 1",
+      title: "Der Angreifer schickt einen präparierten Upload",
+      text: "Ein riesiger, verschachtelter Datei-Upload. PHP verarbeitet ihn, noch bevor der Code der Website überhaupt startet. Die Upload-Fortschrittsanzeige legt dabei schon früh eine Session-ID an.",
+      bild: "Ein Gast kommt mit so viel Gepäck an, dass das Hotel aus allen Nähten platzt.",
+      chain: 1,
+      state: function (s) {
+        fill(s.cells, 0, 19, "atk");
+        s.ptr = { sid: "ok", uns: "ok", bt: "ok" };
+        s.mem = 0.96; s.memKind = "atk";
+        s.packets = [["atk", "POST: Riesen-Upload", "in"]];
+        return s;
+      }
+    },
+    {
+      kicker: "Angriff · Schritt 2",
+      title: "Speicher voll: PHP bricht hart ab",
+      text: "Das memory_limit ist erreicht. PHP springt sofort ans Ende der Anfrage und überspringt dabei das Aufräumen. Der Speicher wird freigegeben, der Merkzettel aber nicht gelöscht. Seine Zeiger zeigen jetzt ins Leere.",
+      bild: "Feueralarm: Der Gast fliegt raus, das Zimmer wird freigegeben. Im Rezeptionsbuch steht aber noch seine Zimmernummer.",
+      chain: 2,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        s.ptr = { sid: "stale", uns: "stale", bt: "stale" };
+        s.mem = 1; s.memKind = "atk";
+        s.oom = true;
+        s.check = "skipped";
+        return s;
+      }
+    },
+    {
+      kicker: "Lücke A · CVE-2026-109618",
+      title: "Eine halb fertige Tabelle",
+      text: "Der Speicher ging mitten im Eintragen eines Formularfelds aus. Der Zähler sagt drei Einträge, geschrieben wurden nur zwei. PHP behandelt das leere dritte Fach trotzdem wie einen echten Wert.",
+      bild: "Auf der Gepäckliste stehen drei Koffer, abgegeben wurden zwei. Der Page holt trotzdem einen dritten aus dem Fach, und den hat der Angreifer hingestellt.",
+      chain: 2,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        s.ptr = { sid: "stale", uns: "stale", bt: "stale" };
+        s.mem = 1; s.memKind = "atk";
+        s.check = "skipped";
+        s.overlay = "table";
+        return s;
+      }
+    },
+    {
+      kicker: "Lücke B · CVE-2026-109619",
+      title: "Alte Zeiger, neue Daten",
+      text: "Die nächste Anfrage des Angreifers landet im selben Worker. Ihr Speicher liegt genau dort, wo vorher die alten Daten waren. Der Merkzettel zeigt jetzt auf Daten des Angreifers, und PHP hält sie für echt.",
+      bild: "Ein neuer Gast zieht ins Zimmer. Die Rezeption glaubt noch, es sei das Zimmer des alten Gastes.",
+      chain: 3,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        fill(s.cells, 0, 13, "evil");
+        s.ptr = { sid: "evil", uns: "evil", bt: "evil" };
+        s.mem = 0.55; s.memKind = "atk";
+        s.check = "skipped";
+        s.packets = [["atk", "nächste Anfrage", "in"]];
+        return s;
+      }
+    },
+    {
+      kicker: "Folge 1 · Datenleck",
+      title: "Fremder Speicher im Cookie",
+      text: "PHP liest den Speicher hinter dem alten Zeiger als Session-ID und schickt ihn im Cookie zurück. So sieht der Angreifer, was dort lag: Tokens, Passwörter und Speicheradressen.",
+      bild: "Die Rezeption gibt dem Angreifer einen Zimmerschlüssel, auf dem steht, was zuletzt im Zimmer lag.",
+      chain: 4,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        fill(s.cells, 0, 13, "evil");
+        s.ptr = { sid: "hot", uns: "evil", bt: "evil" };
+        s.mem = 0.55; s.memKind = "atk";
+        s.check = "skipped";
+        s.res = "leak";
+        s.packets = [["atk", "Set-Cookie: PHPSESSID=%8f%a1…", "out"]];
+        return s;
+      }
+    },
+    {
+      kicker: "Folge 2 · Codeausführung",
+      title: "Von kaputtem Speicher zur Shell",
+      text: "Über die alten Zeiger liest und schreibt PHP in Speicher, den der Angreifer kontrolliert. Mit den Adressen aus dem Leck lenkt er PHP auf eigene Befehle um. Ergebnis: eine Shell mit den Rechten des Webservers.",
+      bild: "Wer die Zimmernummern kennt und das Buch fälschen kann, bestimmt, wohin das Personal läuft.",
+      chain: 4,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        fill(s.cells, 0, 13, "evil");
+        s.ptr = { sid: "evil", uns: "hot", bt: "hot" };
+        s.mem = 0.55; s.memKind = "atk";
+        s.check = "skipped";
+        s.res = "shell";
+        s.pulse = true;
+        return s;
+      }
+    },
+    {
+      kicker: "Warum mod_php?",
+      title: "Langlebige Worker sind am gefährlichsten",
+      text: "Je länger ein Prozess lebt und je mehr Anfragen er nacheinander bearbeitet, desto leichter erreichen Reste die nächste Anfrage.",
+      bild: "Ein Hotel, das nie schließt und dieselben Zimmer ständig neu vergibt.",
+      chain: 5,
+      state: function (s) {
+        fill(s.cells, 0, 19, "freed");
+        fill(s.cells, 0, 13, "evil");
+        s.ptr = { sid: "evil", uns: "evil", bt: "evil" };
+        s.mem = 0.55; s.memKind = "atk";
+        s.check = "skipped";
+        s.res = "shell";
+        s.overlay = "mod";
+        return s;
+      }
+    },
+    {
+      kicker: "Der Fix",
+      title: "Was PHP geändert hat und was Admins tun müssen",
+      text: "Seit den Versionen vom 21. Oktober bricht PHP nicht mehr mitten im Satz ab, und alle Merkzettel werden zuverlässig zurückgesetzt.",
+      bild: "Neue Hausregel: Auch beim Feueralarm wird das Buch sofort aktualisiert.",
+      fixed: true,
+      state: function (s) {
+        s.check = "fixed";
+        s.overlay = "fix";
+        s.fixed = true;
+        return s;
+      }
+    },
+    {
+      kicker: "Zusammenfassung",
+      title: "Die ganze Kette auf einen Blick",
+      text: "Erinnert euch an die Frage vor dem Video. Was braucht der Angreifer für diesen Angriff nicht?",
+      bild: "",
+      chain: 5,
+      state: function (s) { s.overlay = "sum"; return s; }
+    },
+    {
+      kicker: "Zusammenfassung",
+      title: "Die ganze Kette auf einen Blick",
+      text: "Bei Apache mit mod_php reicht eine präparierte Anfrage an fast jede PHP-Seite. Deshalb hilft nur eins: PHP selbst aktualisieren.",
+      bild: "",
+      chain: 5,
+      state: function (s) { s.overlay = "sum"; s.chips = true; return s; }
+    }
+  ];
+
+  var cur = -1;
+  function render(n, animate) {
+    var step = STEPS[n];
+    var s = step.state(base());
+
+    // Kette
+    var ch = step.chain == null ? -1 : step.chain;
+    chain.classList.toggle("fixed", !!step.fixed);
+    for (var i = 0; i < chainLis.length; i++) {
+      var li = chainLis[i];
+      li.classList.toggle("active", !step.fixed && ch >= 0 && ch < 5 && (i === ch || (ch === 1 && i === 0)));
+      li.classList.toggle("done", !step.fixed && ch >= 0 && (i < ch || ch === 5));
+    }
+
+    // Zellen
+    var growing = s.cells.filter(function (c) { return c === "atk" || c === "user" || c === "evil"; }).length;
+    for (var j = 0; j < 20; j++) {
+      var c = cells[j];
+      var cls = "cell s-" + s.cells[j] + (s.pulse && s.cells[j] === "evil" ? " pulse" : "");
+      c.style.transitionDelay = animate && s.cells[j] !== "empty" && s.cells[j] !== "freed" ? (300 + j * 55) + "ms" : (animate && s.cells[j] === "freed" ? (j * 25) + "ms" : "0ms");
+      c.setAttribute("class", cls);
+    }
+
+    // Zeiger
+    ROWS.forEach(function (r) {
+      var k = s.ptr[r.key];
+      var p = ptrs[r.key];
+      p.setAttribute("d", ptrPath(r, TARGET[r.key]));
+      p.setAttribute("class", "ptr " + (k ? "k-" + k : "hidden"));
+      var mk = k === "ok" ? "url(#m-blue)" : (k === "hot" ? "url(#m-yel)" : "url(#m-red)");
+      if (k) p.setAttribute("marker-end", mk); else p.removeAttribute("marker-end");
+      dots[r.key].setAttribute("fill", !k ? "#30363D" : (k === "ok" ? "#58A6FF" : (k === "hot" ? "#D29922" : "#F85149")));
+    });
+
+    // Speicherbalken
+    memfill.setAttribute("class", "memfill k-" + s.memKind);
+    memfill.style.transform = "scaleX(" + s.mem + ")";
+
+    // Checkliste
+    var mark = s.check === "done" || s.check === "fixed" ? "✓" : "";
+    checkMarks.forEach(function (m) { m.textContent = mark; m.setAttribute("fill", "#3FB950"); });
+    var skipped = s.check === "skipped";
+    strike.setAttribute("class", "fade" + (skipped ? "" : " off"));
+    strike2.setAttribute("class", "fade" + (skipped ? "" : " off"));
+    stamp.textContent = skipped ? "→ übersprungen!" : (s.check === "fixed" ? "→ passiert jetzt immer" : "");
+    stamp.setAttribute("fill", skipped ? "#F85149" : "#3FB950");
+
+    // OOM
+    oom.setAttribute("class", "fade" + (s.oom ? (animate ? " oom" : "") : " off"));
+
+    // Ergebnis rechts
+    res.none.setAttribute("class", "fade" + (s.res === "none" ? "" : " off"));
+    res.ok.setAttribute("class", "fade" + (s.res === "ok" ? "" : " off"));
+    res.leak.setAttribute("class", "fade" + (s.res === "leak" || s.res === "shell" ? "" : " off"));
+    res.shell.setAttribute("class", "fade" + (s.res === "shell" ? "" : " off"));
+
+    // Pakete
+    while (packetsG.firstChild) packetsG.removeChild(packetsG.firstChild);
+    if (animate) s.packets.forEach(function (p) { packet(p[0], p[1], p[2]); });
+
+    // Overlays
+    for (var key in overlays) {
+      var on = s.overlay === key;
+      overlays[key].classList.toggle("off", !on);
+      overlays[key].setAttribute("aria-hidden", on ? "false" : "true");
+    }
+    chips.classList.toggle("off", !s.chips);
+
+    // Text
+    document.getElementById("kicker").textContent = step.kicker;
+    document.getElementById("title").textContent = step.title;
+    document.getElementById("text").textContent = step.text;
+    var b = document.getElementById("bild");
+    b.innerHTML = "";
+    if (step.bild) {
+      var lab = document.createElement("b");
+      lab.textContent = "Im Bild: ";
+      b.appendChild(lab);
+      b.appendChild(document.createTextNode(step.bild));
+    }
+    document.getElementById("count").textContent = (n + 1) + " / " + STEPS.length;
+    document.getElementById("bar").style.width = ((n + 1) / STEPS.length * 100) + "%";
+    document.getElementById("prev").disabled = n === 0;
+    document.getElementById("next").disabled = n === STEPS.length - 1;
+    cur = n;
+  }
+
+  function go(n) {
+    if (n < 0 || n >= STEPS.length || n === cur) return;
+    render(n, n === cur + 1);
+  }
+  document.getElementById("next").addEventListener("click", function () { go(cur + 1); });
+  document.getElementById("prev").addEventListener("click", function () { go(cur - 1); });
+  function toggleFs() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+    } catch (e) {}
+  }
+  document.getElementById("fs").addEventListener("click", toggleFs);
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    if (k === "ArrowRight" || k === "ArrowDown" || k === "PageDown" || k === " " || k === "Enter") {
+      if (k === "Enter" && e.target && e.target.tagName === "BUTTON") return;
+      e.preventDefault(); go(cur + 1);
+    } else if (k === "ArrowLeft" || k === "ArrowUp" || k === "PageUp" || k === "Backspace") {
+      e.preventDefault(); go(cur - 1);
+    } else if (k === "Home") { e.preventDefault(); go(0); }
+    else if (k === "End") { e.preventDefault(); go(STEPS.length - 1); }
+    else if (k === "f" || k === "F") { toggleFs(); }
+  });
+  render(0, false);
+})();
+</script>
+
+</body>
+</html>

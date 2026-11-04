@@ -89,15 +89,8 @@ Alle PHP-Worker neu starten, Zugangsdaten und Tokens tauschen und die Logs rück
 
 ## 10. Quellen
 
-- BleepingComputer: [PHP ships emergency patches for critical PHP2Shell flaws](https://bleepingcomputer.com/news/security/php-ships-emergency-patches-for-critical-php2shell-flaws)
-- BleepingComputer: [CISA confirms PHP2Shell vulnerabilities now exploited in attacks](https://bleepingcomputer.com/news/security/cisa-confirms-php2shell-vulnerabilities-now-exploited-in-attacks)
-- BleepingComputer: [CISA warns of Fragnesia Linux flaw chained in PHP2Shell attacks](https://bleepingcomputer.com/news/security/cisa-warns-of-fragnesia-linux-flaw-chained-in-php2shell-attacks)
 - heise online: [php2shell: Critical flaws allow code injection in PHP](https://www.heise.de/en/news/php2shell-Critical-flaws-allow-code-injection-in-PHP-11494897.html)
 - Recorded Future: [PHP2Shell Exploitation: Two Critical PHP Flaws Explained](https://www.recordedfuture.com/blog/php2shell-vulnerability-exploitation)
-- Varonis Threat Labs: [PHP2Shell: One Upload, Full Server](https://www.varonis.com/blog/php2shell)
-- OffSec: [PHP2Shell – Anatomy of Two PHP Lifecycle Bugs](https://www.offsec.com/blog/php2shell-anatomy-of-two-php-lifecycle-bugs/)
-- The Next Web: [PHP knew about one of the flaws in 2024 but could not agree a fix](https://thenextweb.com/news/php-foundation-structural-failure-2024-flaw-leak)
-- iTWire: [PHP2Shell – government sites worldwide offline](https://itwire.com/business-it-news/security/php2shell-the-14-year-old-bugs-that-pulled-cyber-gov-au-and-government-sites-worldwide-offline)
 - CSO Online: [PHP2Shell plus Fragnesia](https://www.csoonline.com/article/4242454/php2shell-plus-fragnesia-a-dangerous-new-route-from-web-server-to-root.html)
 - Cybernews: [China-linked hackers hit US government network](https://cybernews.com/security/china-linked-hackers-exploit-php2shell-breach-us-government/)
 - Hostinger: [php2shell: What it is and why you don't need to panic](https://www.hostinger.com/blog/what-is-php2shell/)

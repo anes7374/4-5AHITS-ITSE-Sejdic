@@ -239,6 +239,8 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 #ov-free .lc-row { padding: 2px 0; }
 #ov-free .arrow-note { margin-top: 8px; }
 .zeiger-hint { margin: 10px 0 0; font-size: clamp(12px, 0.95vw, 15px); color: var(--muted); font-style: italic; }
+#leakread.play .lr-frame { transform-box: view-box; transform-origin: 592px 0; animation: lrgrow 1.4s ease-out .3s both; }
+@keyframes lrgrow { from { transform: scaleX(.22); } to { transform: none; } }
 .counter { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--yellow-soft); border: 1px solid var(--yellow); font-weight: 700; margin-bottom: 4px; font-size: clamp(14px, 1.3vw, 19px); }
 .arrow-note { margin: 12px 0 0; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.4; }
 
@@ -362,6 +364,12 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       <rect x="578" y="70" width="337" height="396" rx="12" class="box"/>
       <text x="596" y="100" font-size="19" font-weight="700">Request-Speicher</text>
       <g id="cells"></g>
+      <g id="leakread" class="fade off">
+        <rect class="lr-frame" x="592" y="172" width="304" height="62" rx="9" fill="rgba(210,153,34,.14)" stroke="#D29922" stroke-width="3" stroke-dasharray="8 5"/>
+        <rect x="596" y="362" width="300" height="54" rx="8" fill="#0D1117" stroke="#D29922" stroke-width="2"/>
+        <text x="746" y="384" text-anchor="middle" font-size="15" font-weight="700" fill="#D29922">PHP liest weiter als erlaubt</text>
+        <text x="746" y="404" text-anchor="middle" font-size="12">Etikett sagt „Länge 5000“ – vom Angreifer gesetzt</text>
+      </g>
       <g font-size="13">
         <rect x="598" y="442" width="12" height="12" fill="rgba(88,166,255,.28)" stroke="#58A6FF"/><text x="614" y="453" font-size="12">Besucher</text>
         <rect x="674" y="442" width="12" height="12" fill="rgba(248,81,73,.62)" stroke="#F85149"/><text x="690" y="453" font-size="12">Angreifer</text>
@@ -640,6 +648,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
   var res = {
     none: document.getElementById("res-none"),
     gap2: document.getElementById("gap2"),
+    leakread: document.getElementById("leakread"),
     ok: document.getElementById("res-ok"),
     leak: document.getElementById("res-leak"),
     shell: document.getElementById("res-shell")
@@ -808,7 +817,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Folge 1 · Datenleck",
       title: "Fremder Speicher im Cookie",
-      text: "PHP liest den Speicher hinter dem alten Zeiger als Session-ID und schickt ihn im Cookie zurück. So sieht der Angreifer, was dort lag: Tokens, Passwörter und Speicheradressen.",
+      text: "PHP liest die Daten am alten Zeiger als Session-ID – samt einer Länge, die der Angreifer gesetzt hat. Also liest PHP weit über das Kästchen hinaus und schickt alles im Cookie zurück: PHP-Verwaltungsdaten mit Speicheradressen, dazu Tokens oder Passwörter.",
       bild: "Die Rezeption gibt dem Angreifer einen Zimmerschlüssel, auf dem steht, was zuletzt im Zimmer lag.",
       chain: 4,
       state: function (s) {
@@ -819,6 +828,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";
         s.res = "leak";
+        s.leakRead = true;
         s.packets = [["atk", "Set-Cookie: PHPSESSID=%8f%a1…", "out"]];
         return s;
       }
@@ -970,6 +980,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     // Ergebnis rechts
     res.none.setAttribute("class", "fade" + (s.res === "none" && !s.gap2 ? "" : " off"));
     res.gap2.setAttribute("class", "fade" + (s.gap2 ? "" : " off"));
+    res.leakread.setAttribute("class", "fade" + (s.leakRead ? (animate ? " play" : "") : " off"));
     res.ok.setAttribute("class", "fade" + (s.res === "ok" ? "" : " off"));
     res.leak.setAttribute("class", "fade" + (s.res === "leak" || s.res === "shell" ? "" : " off"));
     res.shell.setAttribute("class", "fade" + (s.res === "shell" ? "" : " off"));

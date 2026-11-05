@@ -270,6 +270,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 #ov-why.play .fbox.w3 { animation: fin .5s ease-out 1.6s both; }
 #ov-why.play .why-cmp, #ov-why.play .arrow-note { animation: fin .5s ease-out 2.3s both; }
 @media (max-width: 760px) { .flow { grid-template-columns: minmax(0, 1fr); padding-top: 0; } .farr, .jump { display: none; } }
+#res-shell:not(.off) .shs { animation: fin .5s ease-out both; }
 .counter { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--yellow-soft); border: 1px solid var(--yellow); font-weight: 700; margin-bottom: 4px; font-size: clamp(14px, 1.3vw, 19px); }
 .arrow-note { margin: 12px 0 0; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.4; }
 
@@ -466,6 +467,22 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
         <text x="990" y="258" font-size="15">• Speicheradressen</text>
       </g>
       <g id="res-shell" class="fade off">
+        <g class="shs" style="animation-delay:0.3s">
+          <rect x="976" y="72" width="192" height="60" rx="9" fill="#1C2230" stroke="#F85149" stroke-width="1.5"/>
+          <text x="988" y="96" font-size="15" font-weight="700"><tspan fill="#F85149">1</tspan>  Leck → Adressen</text>
+          <text x="988" y="117" font-size="12" class="muted">weiß jetzt, wo Funktionen liegen</text>
+        </g>
+        <g class="shs" style="animation-delay:1.0s">
+          <rect x="976" y="142" width="192" height="60" rx="9" fill="#1C2230" stroke="#F85149" stroke-width="1.5"/>
+          <text x="988" y="166" font-size="15" font-weight="700"><tspan fill="#F85149">2</tspan>  Falsches Etikett</text>
+          <text x="988" y="187" font-size="12" class="muted">„ruf diese Funktion auf“</text>
+        </g>
+        <g class="shs" style="animation-delay:1.7s">
+          <rect x="976" y="212" width="192" height="60" rx="9" fill="#1C2230" stroke="#F85149" stroke-width="1.5"/>
+          <text x="988" y="236" font-size="15" font-weight="700"><tspan fill="#F85149">3</tspan>  PHP folgt blind</text>
+          <text x="988" y="257" font-size="12" class="muted">führt seinen Befehl aus</text>
+        </g>
+        <text x="1072" y="292" text-anchor="middle" font-size="13" font-weight="700" fill="#3FB950">↓ Befehl öffnet Verbindung = Shell</text>
         <rect x="976" y="300" width="192" height="150" rx="10" fill="#010409" stroke="#3FB950" stroke-width="2"/>
         <text x="990" y="328" class="mono" font-size="14" fill="#3FB950">$ id</text>
         <text x="990" y="350" class="mono" font-size="13">uid=33(www-data)</text>
@@ -901,7 +918,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Folge 2 · Codeausführung",
       title: "Von kaputtem Speicher zur Shell",
-      text: "Über die alten Zeiger liest und schreibt PHP in Speicher, den der Angreifer kontrolliert. Mit den Adressen aus dem Leck lenkt er PHP auf eigene Befehle um. Ergebnis: eine Shell mit den Rechten des Webservers.",
+      text: "Wieder der Trick mit dem Etikett: Mit den Adressen aus dem Leck schreibt der Angreifer ein Etikett „Ruf diese Funktion auf“. PHP folgt ihm und führt seinen Befehl aus. Der erste Befehl öffnet eine Verbindung zum Angreifer – eine Shell mit den Rechten des Webservers.",
       chain: 4,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -1038,7 +1055,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     res.gap2.setAttribute("class", "fade" + (s.gap2 ? "" : " off"));
     res.leakread.setAttribute("class", "fade" + (s.leakRead ? (animate ? " play" : "") : " off"));
     res.ok.setAttribute("class", "fade" + (s.res === "ok" ? "" : " off"));
-    res.leak.setAttribute("class", "fade" + (s.res === "leak" || s.res === "shell" ? "" : " off"));
+    res.leak.setAttribute("class", "fade" + (s.res === "leak" ? "" : " off"));
     res.shell.setAttribute("class", "fade" + (s.res === "shell" ? "" : " off"));
 
     // Pakete

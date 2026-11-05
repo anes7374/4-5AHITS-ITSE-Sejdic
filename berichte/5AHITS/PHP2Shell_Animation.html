@@ -274,8 +274,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 .kicker { font-family: var(--f-mono); font-size: clamp(11px, 0.8vw, 13px); letter-spacing: .06em; text-transform: uppercase; color: var(--yellow); }
 .caption h2 { margin: 0; font-family: var(--f-head); font-size: clamp(18px, 1.6vw, 26px); line-height: 1.15; text-wrap: balance; }
 .caption p { margin: 0; font-size: clamp(14px, 1.05vw, 17px); line-height: 1.35; max-width: 110ch; }
-.caption .bild { color: var(--muted); font-style: italic; }
-.caption .bild b { font-style: normal; color: var(--yellow); font-weight: 600; }
 
 /* Steuerung */
 .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -532,7 +530,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     <span class="kicker" id="kicker"></span>
     <h2 id="title"></h2>
     <p id="text"></p>
-    <p class="bild" id="bild"></p>
   </div>
 
   <div class="controls">
@@ -693,14 +690,12 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Einführung",
       title: "Wie aus einer Anfrage eine Shell wird",
       text: "Links schicken ein Besucher und ein Angreifer Anfragen. In der Mitte arbeitet ein PHP-Worker: ein Prozess, der viele Anfragen nacheinander bearbeitet. Er hat globale Zeiger, die festhalten, wo Daten liegen, und für jede Anfrage einen Speicherbereich.",
-      bild: "Stellt euch den Worker als Hotel vor: Anfragen sind Gäste, der Speicher sind die Zimmer, die globalen Zeiger sind das Buch an der Rezeption.",
       state: function (s) { return s; }
     },
     {
       kicker: "Normalfall · 1 von 2",
       title: "Eine normale Anfrage kommt an",
       text: "PHP legt im Speicher an, was die Anfrage braucht, und hält in den globalen Zeigern fest, wo es liegt, zum Beispiel die Session-ID.",
-      bild: "Ein Gast checkt ein. Die Rezeption schreibt ins Buch: Gast Müller, Zimmer 5.",
       state: function (s) {
         fill(s.cells, 0, 9, "user");
         mark(s.cells, [1, 4, 9], "php");
@@ -714,7 +709,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Normalfall · 2 von 2",
       title: "Am Ende wird sauber aufgeräumt",
       text: "Die Antwort geht raus. Dann löscht PHP die globalen Zeiger und gibt den Speicher frei. Die nächste Anfrage startet sauber.",
-      bild: "Beim Check-out wird erst der Eintrag im Buch gestrichen, dann wird das Zimmer geputzt.",
       state: function (s) {
         s.check = "done";
         s.res = "ok";
@@ -726,7 +720,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Angriff · Schritt 1",
       title: "Der Angreifer schickt einen präparierten Upload",
       text: "Jede Website ist öffentlich: Jeder kann ihr Anfragen schicken. Der Angreifer baut mit einem Skript einen riesigen, verschachtelten Datei-Upload und schickt ihn an irgendeine PHP-Seite. PHP liest ihn automatisch ein, bevor die Website startet – ohne Formular, ohne Login.",
-      bild: "Ein Gast kommt mit so viel Gepäck an, dass das Hotel aus allen Nähten platzt.",
       chain: 1,
       state: function (s) {
         fill(s.cells, 0, 19, "atk");
@@ -741,7 +734,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Angriff · Schritt 2",
       title: "Speicher voll: PHP bricht hart ab",
       text: "Das memory_limit ist erreicht. PHP springt sofort ans Ende der Anfrage und überspringt dabei das Aufräumen. Der Speicher wird freigegeben, die globalen Zeiger aber nicht gelöscht. Sie zeigen jetzt ins Leere.",
-      bild: "Feueralarm: Der Gast fliegt raus, das Zimmer wird freigegeben. Im Rezeptionsbuch steht aber noch seine Zimmernummer.",
       chain: 2,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -756,7 +748,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Lücke 1 von 2 · CVE-2026-109618",
       title: "Lücke 1: Eine halb fertige Tabelle",
       text: "Der Speicher ging mitten im Eintragen eines Formularfelds aus. Der Zähler sagt drei Einträge, geschrieben wurden nur zwei. PHP behandelt das leere dritte Fach trotzdem wie einen echten Wert.",
-      bild: "Auf der Gepäckliste stehen drei Koffer, abgegeben wurden zwei. Der Page holt trotzdem einen dritten aus dem Fach – den hat der Angreifer hingestellt.",
       chain: 2,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -771,7 +762,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Lücke 1 von 2 · Warum das gefährlich ist",
       title: "Freigeben heißt nicht wegwerfen",
       text: "Bei Fach 2 hat PHP das Etikett selbst geschrieben – der Angreifer bestimmt nur den Inhalt. Bei Fach 3 liest PHP alte Reste als Etikett: Typ und Adresse stammen vom Angreifer. Beim Aufräumen folgt PHP genau diesen Angaben.",
-      bild: "Im Fach liegt ein gefälschter Zettel: „Bitte das Büro mit dem Tresor räumen und den Schlüssel dem nächsten Gast geben.“ Der Page führt ihn aus.",
       chain: 2,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -786,7 +776,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Lücke 2 von 2 · CVE-2026-109619 · Use-after-free",
       title: "Lücke 2: Alte Zeiger, neue Daten",
       text: "Die nächste Anfrage des Angreifers landet im selben Worker und bekommt genau den frei gewordenen Speicher. Die alten Zeiger zeigen jetzt auf Daten des Angreifers, und PHP hält sie für echt. Das heißt Use-after-free: Speicher wird benutzt, nachdem er freigegeben wurde.",
-      bild: "Ein neuer Gast zieht ins Zimmer. Die Rezeption glaubt noch, es sei das Zimmer des alten Gastes.",
       chain: 3,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -804,7 +793,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Folge 1 · Datenleck",
       title: "Fremder Speicher im Cookie",
       text: "PHP liest die Daten am alten Zeiger als Session-ID – samt einer Länge, die der Angreifer gesetzt hat. Also liest PHP weit über das Kästchen hinaus und schickt alles im Cookie zurück: PHP-Verwaltungsdaten mit Speicheradressen, dazu Tokens oder Passwörter.",
-      bild: "Die Rezeption gibt dem Angreifer einen Zimmerschlüssel, auf dem steht, was zuletzt im Zimmer lag.",
       chain: 4,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -823,7 +811,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Folge 2 · Codeausführung",
       title: "Von kaputtem Speicher zur Shell",
       text: "Über die alten Zeiger liest und schreibt PHP in Speicher, den der Angreifer kontrolliert. Mit den Adressen aus dem Leck lenkt er PHP auf eigene Befehle um. Ergebnis: eine Shell mit den Rechten des Webservers.",
-      bild: "Wer die Zimmernummern kennt und das Buch fälschen kann, bestimmt, wohin das Personal läuft.",
       chain: 4,
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
@@ -841,7 +828,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Der Fix",
       title: "Was PHP geändert hat und was Admins tun müssen",
       text: "Seit den Versionen vom 21. Oktober bricht PHP nicht mehr mitten im Satz ab, und alle globalen Zeiger werden zuverlässig zurückgesetzt.",
-      bild: "Neue Hausregel: Auch beim Feueralarm wird das Buch sofort aktualisiert.",
       fixed: true,
       state: function (s) {
         s.check = "fixed";
@@ -854,7 +840,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Zusammenfassung",
       title: "Die ganze Kette auf einen Blick",
       text: "Erinnert euch an die Frage vor dem Video. Was braucht der Angreifer für diesen Angriff nicht?",
-      bild: "",
       chain: 5,
       state: function (s) { s.overlay = "sum"; return s; }
     },
@@ -862,7 +847,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       kicker: "Zusammenfassung",
       title: "Die ganze Kette auf einen Blick",
       text: "Eine einzige präparierte Anfrage an fast jede PHP-Seite reicht – ohne Login. Deshalb hilft nur eins: PHP selbst aktualisieren.",
-      bild: "",
       chain: 5,
       state: function (s) { s.overlay = "sum"; s.chips = true; return s; }
     }
@@ -873,14 +857,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     document.getElementById("kicker").textContent = step.kicker;
     document.getElementById("title").textContent = step.title;
     document.getElementById("text").textContent = step.text;
-    var b = document.getElementById("bild");
-    b.innerHTML = "";
-    if (step.bild) {
-      var lab = document.createElement("b");
-      lab.textContent = "Im Bild: ";
-      b.appendChild(lab);
-      b.appendChild(document.createTextNode(step.bild));
-    }
   }
   // Höhe der Erklärung auf den längsten Schritt festlegen, damit die Bühne nie springt
   function lockCaption() {

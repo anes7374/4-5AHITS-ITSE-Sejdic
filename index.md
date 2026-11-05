@@ -7,6 +7,8 @@ layout: default
 
 ## 5AHITS
 
+- 2026-11-06 - [PHP2Shell – Incident-Report](berichte/5AHITS/incident_report_php2shell.html)
+- 2026-11-06 - [PHP2Shell – Animation](berichte/5AHITS/PHP2Shell_Animation.html)
 - 2026-09-28 - [Ryuk Ransomware](berichte/5AHITS/260928.html)
 
 ## 4AHITS

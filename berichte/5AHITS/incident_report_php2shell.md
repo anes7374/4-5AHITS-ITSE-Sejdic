@@ -31,7 +31,6 @@ PHP2Shell ist der Spitzname für zwei kritische Lücken in der PHP-Engine selbst
 | 20. Okt. | Die CVE-Nummern sickern mit falschem Score (10.0) durch, Calif veröffentlicht versehentlich ein Exploit-Video. PHP zieht das Release um einen Tag vor. |
 | 21. Okt. | Patch erscheint (8.5.12, 8.4.27, 8.3.36, 8.2.35); Hoster und Cloudflare melden schon vorher Angriffe. Regierungen nehmen ihre Portale vorsorglich offline, z. B. in den Niederlanden und in Finnland. |
 | 24. Okt. | Erste bestätigte Remote Code Execution auf Honeypots. |
-| 25. Okt. | Dream Security deckt eine Kampagne mit 25 übernommenen Servern auf. |
 | 26. Okt. | CISA nimmt beide CVEs in den Katalog aktiv ausgenutzter Schwachstellen (KEV) auf. |
 
 ## 3. Betroffene Organisationen und Systeme

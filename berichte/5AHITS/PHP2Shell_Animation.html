@@ -487,27 +487,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       </div>
     </div>
 
-    <!-- Overlay: mod_php -->
-    <div class="overlay off" id="ov-mod" aria-hidden="true">
-      <div class="card">
-        <h3>Wie lange lebt ein Worker?</h3>
-        <div class="cols">
-          <div class="col">
-            <h4 class="tag-red">Apache + mod_php: höchstes Risiko</h4>
-            <div class="lane"><span class="req a">Angriff</span><span class="req u">Anfrage 2</span><span class="req u">Anfrage 3</span><span class="req u">…</span></div>
-            <div class="worker-bar long"></div>
-            <p>Ein Prozess bearbeitet sehr viele Anfragen hintereinander. Liegengebliebene Zeiger erreichen die nächste Anfrage. Fast jede PHP-Seite reicht als Ziel.</p>
-          </div>
-          <div class="col">
-            <h4 class="tag-yel">PHP-FPM, php-cgi, LiteSpeed, FrankenPHP</h4>
-            <div class="lane"><span class="req a">Angriff</span><span class="req u">Anfrage 2</span><span class="req u">Anfrage 3</span></div>
-            <div class="worker-bar short"></div>
-            <p>Bricht der Start einer Anfrage ab, wird der Prozess bei FPM oft beendet. Das Risiko ist kleiner, aber nicht null. Patchen müssen alle.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Overlay: Fix -->
     <div class="overlay off" id="ov-fix" aria-hidden="true">
       <div class="card">
@@ -664,7 +643,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
   var overlays = {
     table: document.getElementById("ov-table"),
     free: document.getElementById("ov-free"),
-    mod: document.getElementById("ov-mod"),
     fix: document.getElementById("ov-fix"),
     sum: document.getElementById("ov-sum")
   };
@@ -860,24 +838,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       }
     },
     {
-      kicker: "Warum mod_php?",
-      title: "Langlebige Worker sind am gefährlichsten",
-      text: "Je länger ein Prozess lebt und je mehr Anfragen er nacheinander bearbeitet, desto leichter erreichen Reste die nächste Anfrage.",
-      bild: "Ein Hotel, das nie schließt und dieselben Zimmer ständig neu vergibt.",
-      chain: 5,
-      state: function (s) {
-        fill(s.cells, 0, 19, "freed");
-        fill(s.cells, 0, 13, "evil");
-        mark(s.cells, [1, 6], "php");
-        s.ptr = { sid: "evil", uns: "evil", bt: "evil" };
-        s.mem = 0.55; s.memKind = "atk";
-        s.check = "skipped";
-        s.res = "shell";
-        s.overlay = "mod";
-        return s;
-      }
-    },
-    {
       kicker: "Der Fix",
       title: "Was PHP geändert hat und was Admins tun müssen",
       text: "Seit den Versionen vom 21. Oktober bricht PHP nicht mehr mitten im Satz ab, und alle globalen Zeiger werden zuverlässig zurückgesetzt.",
@@ -901,7 +861,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Zusammenfassung",
       title: "Die ganze Kette auf einen Blick",
-      text: "Bei Apache mit mod_php reicht eine präparierte Anfrage an fast jede PHP-Seite. Deshalb hilft nur eins: PHP selbst aktualisieren.",
+      text: "Eine einzige präparierte Anfrage an fast jede PHP-Seite reicht – ohne Login. Deshalb hilft nur eins: PHP selbst aktualisieren.",
       bild: "",
       chain: 5,
       state: function (s) { s.overlay = "sum"; s.chips = true; return s; }

@@ -35,7 +35,7 @@ PHP2Shell ist der Spitzname für zwei kritische Lücken in der PHP-Engine selbst
 
 ## 3. Betroffene Organisationen und Systeme
 
-- **Alle PHP-Server**, die Web-Anfragen bedienen: PHP 5.4 bis 8.5 vor dem 21.10.2026. Am gefährdetsten ist Apache mit mod_php, betroffen sind aber auch PHP-FPM, php-cgi, FrankenPHP und LiteSpeed.
+- **Alle PHP-Server**, die Web-Anfragen bedienen: PHP 5.4 bis 8.5 vor dem 21.10.2026.
 - **Alle Anwendungen darauf**, z. B. WordPress, Drupal und Joomla – der Fehler tritt auf, bevor der Website-Code läuft.
 - **Ausmaß:** Rund 69 % aller Websites mit bekannter Server-Sprache laufen auf PHP; die meisten Server, die ihre Version verraten, nutzen Versionen ohne offiziellen Fix (≤ 8.1).
 - **Bestätigte Opfer:** 25 übernommene Server, darunter Firewalls von Palo Alto Networks und drei Systeme mit Bezug zur US-Regierung (Ziele in USA, Japan, Taiwan, Südkorea).
@@ -66,7 +66,7 @@ Nach dem Leak wurden die Lücken schnell aktiv angegriffen. Hinter der gezielten
 - **PHP:** Notfall-Release am 21.10. Der Fix ersetzt den harten Abbruch durch eine sichere Behandlung und setzt globale Zeiger zuverlässig zurück.
 - **Infrastruktur:** Cloudflare aktivierte Schutzregeln für alle Kunden, auch gratis; Hoster lieferten Hotfixes.
 - **Behörden:** Die US-Behörde CISA nahm die Lücken in ihren Katalog aktiv ausgenutzter Schwachstellen auf – Pflicht-Patch für US-Ämter.
-- **Für Betreiber:** PHP updaten, **alle Worker neu starten**, Zugangsdaten tauschen, Logs ab Mitte Oktober prüfen. Einstellungsänderungen ersetzen den Patch nicht.
+- **Für Betreiber:** PHP updaten, **alle Worker neu starten**, Zugangsdaten tauschen, Logs ab Mitte Oktober prüfen.
 
 ## 8. Lessons Learned und Gegenmaßnahmen
 

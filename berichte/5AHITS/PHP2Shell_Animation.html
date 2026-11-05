@@ -117,6 +117,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 .cell.s-user  { fill: var(--blue-soft); stroke: var(--blue); }
 .cell.s-atk   { fill: var(--red-soft); stroke: var(--red); }
 .cell.s-freed { fill: transparent; stroke: var(--muted); stroke-dasharray: 5 5; }
+.cell.s-php   { fill: #3A3F4B; stroke: #C9D1D9; }
 .cell.s-evil  { fill: var(--red-strong); stroke: var(--red); }
 .cell.s-evil.pulse { animation: pulse 1.1s ease-in-out infinite; }
 @keyframes pulse { 50% { fill: var(--red-soft); } }
@@ -362,9 +363,10 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       <text x="596" y="100" font-size="19" font-weight="700">Request-Speicher</text>
       <g id="cells"></g>
       <g font-size="13">
-        <rect x="598" y="442" width="12" height="12" fill="rgba(88,166,255,.28)" stroke="#58A6FF"/><text x="615" y="453">Besucher</text>
-        <rect x="684" y="442" width="12" height="12" fill="rgba(248,81,73,.62)" stroke="#F85149"/><text x="701" y="453">Angreifer</text>
-        <rect x="772" y="442" width="12" height="12" fill="none" stroke="#8B949E" stroke-dasharray="3 3"/><text x="789" y="453">freigegeben</text>
+        <rect x="598" y="442" width="12" height="12" fill="rgba(88,166,255,.28)" stroke="#58A6FF"/><text x="614" y="453" font-size="12">Besucher</text>
+        <rect x="674" y="442" width="12" height="12" fill="rgba(248,81,73,.62)" stroke="#F85149"/><text x="690" y="453" font-size="12">Angreifer</text>
+        <rect x="750" y="442" width="12" height="12" fill="#3A3F4B" stroke="#C9D1D9"/><text x="766" y="453" font-size="12">PHP-Verwaltung</text>
+        <rect x="864" y="442" width="12" height="12" fill="none" stroke="#8B949E" stroke-dasharray="3 3"/><text x="880" y="453" font-size="12">frei</text>
       </g>
 
       <!-- Speicherbalken -->
@@ -689,6 +691,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     };
   }
   function fill(arr, from, to, v) { for (var i = from; i <= to; i++) arr[i] = v; return arr; }
+  function mark(arr, idx, v) { idx.forEach(function (i) { arr[i] = v; }); return arr; }
 
   var STEPS = [
     {
@@ -705,6 +708,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       bild: "Ein Gast checkt ein. Die Rezeption schreibt ins Buch: Gast Müller, Zimmer 5.",
       state: function (s) {
         fill(s.cells, 0, 9, "user");
+        mark(s.cells, [1, 4, 9], "php");
         s.ptr = { sid: "ok", uns: "ok" };
         s.mem = 0.32;
         s.packets = [["user", "GET /index.php", "in"]];
@@ -731,6 +735,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       chain: 1,
       state: function (s) {
         fill(s.cells, 0, 19, "atk");
+        mark(s.cells, [1, 4, 9, 12, 14, 18], "php");
         s.ptr = { sid: "ok", uns: "ok", bt: "ok" };
         s.mem = 0.96; s.memKind = "atk";
         s.packets = [["atk", "POST: Riesen-Upload", "in"]];
@@ -791,6 +796,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
         fill(s.cells, 0, 13, "evil");
+        mark(s.cells, [1, 6], "php");
         s.ptr = { sid: "evil", uns: "evil", bt: "evil" };
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";
@@ -808,6 +814,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
         fill(s.cells, 0, 13, "evil");
+        mark(s.cells, [1, 6], "php");
         s.ptr = { sid: "hot", uns: "evil", bt: "evil" };
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";
@@ -825,6 +832,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
         fill(s.cells, 0, 13, "evil");
+        mark(s.cells, [1, 6], "php");
         s.ptr = { sid: "evil", uns: "hot", bt: "hot" };
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";
@@ -842,6 +850,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       state: function (s) {
         fill(s.cells, 0, 19, "freed");
         fill(s.cells, 0, 13, "evil");
+        mark(s.cells, [1, 6], "php");
         s.ptr = { sid: "evil", uns: "evil", bt: "evil" };
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";

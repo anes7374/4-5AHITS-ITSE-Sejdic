@@ -1,5 +1,6 @@
 ---
 title: "Incident-Report: PHP2Shell (CVE-2026-109618 / CVE-2026-109619)"
+layout: default
 ---
 
 # Incident-Report: PHP2Shell

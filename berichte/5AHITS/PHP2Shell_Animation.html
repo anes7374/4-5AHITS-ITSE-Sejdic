@@ -215,10 +215,10 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 
 /* Erklärung */
 .caption {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  min-height: 7.6em;
+  overflow: hidden;
 }
 .kicker { font-family: var(--f-mono); font-size: clamp(12px, 1vw, 15px); letter-spacing: .06em; text-transform: uppercase; color: var(--yellow); }
 .caption h2 { margin: 0; font-family: var(--f-head); font-size: clamp(22px, 2.3vw, 36px); line-height: 1.15; text-wrap: balance; }
@@ -238,6 +238,9 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 .controls button:disabled { opacity: .4; cursor: default; }
 .progress { flex: 1 1 160px; height: 6px; background: var(--panel); border-radius: 99px; overflow: hidden; min-width: 100px; }
 .progress i { display: block; height: 100%; background: var(--red); width: 0; transition: width .4s; }
+.report-link { font-size: 15px; color: var(--blue); text-decoration: none; border: 1px solid var(--line); border-radius: 8px; padding: 7px 14px; }
+.report-link:hover { border-color: var(--blue); }
+.report-link:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .count { font-family: var(--f-mono); color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .hint { color: var(--muted); font-size: 13px; }
 
@@ -296,8 +299,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 
       <!-- Server -->
       <rect x="270" y="14" width="665" height="532" rx="18" fill="#0D1117" stroke="#8B949E" stroke-width="2"/>
-      <text x="292" y="50" class="head" font-size="24">PHP-Worker</text>
-      <text x="430" y="50" class="muted" font-size="16">ein Prozess, viele Anfragen nacheinander</text>
+      <text x="292" y="50"><tspan class="head" font-size="24">PHP-Worker</tspan><tspan dx="12" class="muted" font-size="16">ein Prozess, viele Anfragen nacheinander</tspan></text>
 
       <!-- Merkzettel -->
       <rect x="292" y="70" width="262" height="262" rx="12" class="box"/>
@@ -449,7 +451,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     </div>
   </div>
 
-  <div class="caption" aria-live="polite">
+  <div class="caption" id="caption" aria-live="polite">
     <span class="kicker" id="kicker"></span>
     <h2 id="title"></h2>
     <p id="text"></p>
@@ -462,6 +464,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     <span class="count" id="count"></span>
     <div class="progress" aria-hidden="true"><i id="bar"></i></div>
     <button type="button" id="fs">Vollbild (F)</button>
+    <a class="report-link" href="https://anes7374.github.io/4-5AHITS-ITSE-Sejdic/berichte/5AHITS/incident_report_php2shell.html" target="_blank" rel="noopener">Zum Incident-Report →</a>
     <span class="hint">Pfeiltasten, Leertaste oder Presenter</span>
     <span class="hint">Anes Sejdic &amp; Aldin Mukic · erstellt mit KI-Unterstützung (Claude, Opus 5.5)</span>
   </div>
@@ -773,6 +776,31 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     }
   ];
 
+  var captionEl = document.getElementById("caption");
+  function setCaption(step) {
+    document.getElementById("kicker").textContent = step.kicker;
+    document.getElementById("title").textContent = step.title;
+    document.getElementById("text").textContent = step.text;
+    var b = document.getElementById("bild");
+    b.innerHTML = "";
+    if (step.bild) {
+      var lab = document.createElement("b");
+      lab.textContent = "Im Bild: ";
+      b.appendChild(lab);
+      b.appendChild(document.createTextNode(step.bild));
+    }
+  }
+  // Höhe der Erklärung auf den längsten Schritt festlegen, damit die Bühne nie springt
+  function lockCaption() {
+    captionEl.style.height = "auto";
+    var max = 0;
+    STEPS.forEach(function (st) { setCaption(st); max = Math.max(max, captionEl.scrollHeight); });
+    captionEl.style.height = Math.ceil(max) + "px";
+    setCaption(STEPS[cur < 0 ? 0 : cur]);
+  }
+  var rt;
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(lockCaption, 120); });
+
   var cur = -1;
   function render(n, animate) {
     var step = STEPS[n];
@@ -842,17 +870,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     chips.classList.toggle("off", !s.chips);
 
     // Text
-    document.getElementById("kicker").textContent = step.kicker;
-    document.getElementById("title").textContent = step.title;
-    document.getElementById("text").textContent = step.text;
-    var b = document.getElementById("bild");
-    b.innerHTML = "";
-    if (step.bild) {
-      var lab = document.createElement("b");
-      lab.textContent = "Im Bild: ";
-      b.appendChild(lab);
-      b.appendChild(document.createTextNode(step.bild));
-    }
+    setCaption(step);
     document.getElementById("count").textContent = (n + 1) + " / " + STEPS.length;
     document.getElementById("bar").style.width = ((n + 1) / STEPS.length * 100) + "%";
     document.getElementById("prev").disabled = n === 0;
@@ -886,6 +904,8 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     else if (k === "f" || k === "F") { toggleFs(); }
   });
   render(0, false);
+  lockCaption();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(lockCaption);
 })();
 </script>
 

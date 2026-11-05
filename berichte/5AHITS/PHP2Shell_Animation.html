@@ -271,6 +271,12 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 #ov-why.play .why-cmp, #ov-why.play .arrow-note { animation: fin .5s ease-out 2.3s both; }
 @media (max-width: 760px) { .flow { grid-template-columns: minmax(0, 1fr); padding-top: 0; } .farr, .jump { display: none; } }
 #res-shell:not(.off) .shs { animation: fin .5s ease-out both; }
+#ov-end { background: var(--bg); }
+.end-card { text-align: center; padding: 20px; }
+.end-q { font-family: var(--f-head); font-size: clamp(80px, 11vw, 170px); font-weight: 700; line-height: 1; color: var(--red); }
+.end-card h2 { font-family: var(--f-head); font-size: clamp(32px, 4.2vw, 64px); margin: 10px 0 18px; }
+.end-sum { font-size: clamp(16px, 1.5vw, 24px); color: var(--muted); line-height: 1.5; margin: 0; }
+.end-sum b { font-weight: 700; }
 .counter { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--yellow-soft); border: 1px solid var(--yellow); font-weight: 700; margin-bottom: 4px; font-size: clamp(14px, 1.3vw, 19px); }
 .arrow-note { margin: 12px 0 0; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.4; }
 
@@ -513,6 +519,15 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       </div>
     </div>
 
+    <!-- Overlay: Abschluss -->
+    <div class="overlay off" id="ov-end" aria-hidden="true">
+      <div class="end-card">
+        <div class="end-q">?</div>
+        <h2>Fragen zum Technikteil?</h2>
+        <p class="end-sum">Nach dem Abbruch vertraut PHP etwas, das nicht mehr stimmt –<br>einmal einem <b class="tag-yel">Zähler</b>, einmal einem <b class="tag-red">Zeiger</b>.</p>
+      </div>
+    </div>
+
     <!-- Overlay: Warum Speicher frei, Zeiger nicht -->
     <div class="overlay off" id="ov-why" aria-hidden="true">
       <div class="card">
@@ -730,6 +745,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     table: document.getElementById("ov-table"),
     free: document.getElementById("ov-free"),
     why: document.getElementById("ov-why"),
+    end: document.getElementById("ov-end"),
     fix: document.getElementById("ov-fix"),
     sum: document.getElementById("ov-sum")
   };
@@ -957,6 +973,13 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       text: "Eine einzige präparierte Anfrage an fast jede PHP-Seite reicht – ohne Login. Deshalb hilft nur eins: PHP selbst aktualisieren.",
       chain: 5,
       state: function (s) { s.overlay = "sum"; s.chips = true; return s; }
+    },
+    {
+      kicker: "Abschluss",
+      title: "Fragen zum Technikteil?",
+      text: "Zeit für eure Fragen, bevor es weitergeht.",
+      chain: 5,
+      state: function (s) { s.overlay = "end"; return s; }
     }
   ];
 

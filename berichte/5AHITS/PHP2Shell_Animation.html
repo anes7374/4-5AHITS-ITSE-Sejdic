@@ -125,7 +125,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 @keyframes pulse { 50% { fill: var(--red-soft); } }
 
 .ptr { fill: none; stroke-width: 3; transition: opacity .45s, stroke .45s; }
-.ptr.k-ok { stroke: var(--blue); }
+.ptr.k-ok { stroke: #C9D1D9; }
 .ptr.k-stale { stroke: var(--red); stroke-dasharray: 7 6; }
 .ptr.k-evil { stroke: var(--red); stroke-width: 4; }
 .ptr.k-hot { stroke: var(--yellow); stroke-width: 5; }
@@ -327,7 +327,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
   <div class="stage" id="stage">
     <svg viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animation: PHP-Worker mit globalen Zeigern und Request-Speicher">
       <defs>
-        <marker id="m-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#58A6FF"/></marker>
+        <marker id="m-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C9D1D9"/></marker>
         <marker id="m-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F85149"/></marker>
         <marker id="m-yel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D29922"/></marker>
       </defs>
@@ -930,7 +930,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       p.setAttribute("class", "ptr " + (k ? "k-" + k : "hidden"));
       var mk = k === "ok" ? "url(#m-blue)" : (k === "hot" ? "url(#m-yel)" : "url(#m-red)");
       if (k) p.setAttribute("marker-end", mk); else p.removeAttribute("marker-end");
-      dots[r.key].setAttribute("fill", !k ? "#30363D" : (k === "ok" ? "#58A6FF" : (k === "hot" ? "#D29922" : "#F85149")));
+      dots[r.key].setAttribute("fill", !k ? "#30363D" : (k === "ok" ? "#C9D1D9" : (k === "hot" ? "#D29922" : "#F85149")));
     });
 
     ptrG.classList.toggle("dim", s.overlay === "table" || s.overlay === "free");

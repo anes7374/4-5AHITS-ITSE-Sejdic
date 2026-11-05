@@ -96,6 +96,12 @@ Weil die Lücke Speicher mit Passwörtern und Tokens nach außen leakt. Diese Zu
 - CSO Online: [PHP2Shell plus Fragnesia](https://www.csoonline.com/article/4242454/php2shell-plus-fragnesia-a-dangerous-new-route-from-web-server-to-root.html)
 - Cybernews: [China-linked hackers hit US government network](https://cybernews.com/security/china-linked-hackers-exploit-php2shell-breach-us-government/)
 - Hostinger: [php2shell: What it is and why you don't need to panic](https://www.hostinger.com/blog/what-is-php2shell/)
+- BSI: [Cybersicherheitswarnung PHP2Shell (CVE-2026-109618/109619)](https://www.bsi.bund.de/SharedDocs/Cybersicherheitswarnungen/DE/2026/2026-297981-1032.pdf)
+- calif.io: [PHP2Shell](https://calif.io/php2shell/)
+- The Register: [CISA confirms PHP2Shell under attack as researchers clock successful exploits](https://www.theregister.com/cyber-crime/2026/10/27/cisa-confirms-php2shell-under-attack-as-researchers-clock-successful-exploits/5305681)
+- SecurityWeek: [China-linked hackers exploit PHP2Shell to root firewalls](https://www.securityweek.com/china-linked-hackers-exploit-php2shell-to-root-firewalls)
+- Salzburg24: [Uni Salzburg und Cineplexx vorsorglich offline](https://www.salzburg24.at/news/salzburg/cyber-sicherheitsluecke-bedroht-weltweit-millionen-websites-uni-salzburg-und-cineplexx-vorsorglich-offline-art-342097)
+- W3Techs: [Usage statistics of PHP for websites](https://w3techs.com/technologies/details/pl-php)
 - Video im Briefing: [PHP2Shell – The PHP Flaw That Took Government Websites Offline, Explained](https://www.youtube.com/watch?v=v5NjeVJiF7Q)
 
 ## 11. KI-Unterstützung

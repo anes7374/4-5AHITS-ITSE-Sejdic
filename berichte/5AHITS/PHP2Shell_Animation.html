@@ -192,6 +192,9 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 .ht td:last-child { border-right: 1px solid var(--line); border-radius: 0 8px 8px 0; }
 .ht tr.bad td { background: var(--red-soft); border-color: var(--red); }
 .ht tr.bad td:first-child { color: var(--fg); }
+.gap-badge { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 10px 16px; margin: 0 0 14px; border-radius: 10px; background: var(--red-soft); border: 2px solid var(--red); }
+.gap-num { font-family: var(--f-head); font-weight: 700; font-size: clamp(20px, 2vw, 30px); color: var(--fg); }
+.gap-id { font-family: var(--f-mono); font-size: clamp(13px, 1.1vw, 17px); color: var(--fg); }
 .counter { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--yellow-soft); border: 1px solid var(--yellow); font-weight: 700; margin-bottom: 4px; font-size: clamp(14px, 1.3vw, 19px); }
 .arrow-note { margin: 12px 0 0; font-size: clamp(15px, 1.35vw, 20px); line-height: 1.4; }
 
@@ -274,7 +277,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
   </ol>
 
   <div class="stage" id="stage">
-    <svg viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animation: PHP-Worker mit Merkzettel und Request-Speicher">
+    <svg viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animation: PHP-Worker mit globalen Zeigern und Request-Speicher">
       <defs>
         <marker id="m-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#58A6FF"/></marker>
         <marker id="m-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F85149"/></marker>
@@ -301,10 +304,9 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       <rect x="270" y="14" width="665" height="532" rx="18" fill="#0D1117" stroke="#8B949E" stroke-width="2"/>
       <text x="292" y="50"><tspan class="head" font-size="24">PHP-Worker</tspan><tspan dx="12" class="muted" font-size="16">ein Prozess, viele Anfragen nacheinander</tspan></text>
 
-      <!-- Merkzettel -->
+      <!-- Globale Zeiger -->
       <rect x="292" y="70" width="262" height="262" rx="12" class="box"/>
-      <text x="310" y="100" font-size="19" font-weight="700">Merkzettel</text>
-      <text x="413" y="100" class="muted" font-size="15">(globale Zeiger)</text>
+      <text x="310" y="98"><tspan font-size="19" font-weight="700">Globale Zeiger</tspan><tspan dx="8" class="muted" font-size="13">zeigen auf Daten</tspan></text>
       <g id="rows"></g>
 
       <!-- Aufräum-Checkliste -->
@@ -344,6 +346,15 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       <g id="res-none" class="fade">
         <text x="1072" y="270" text-anchor="middle" class="muted" font-size="16">noch nichts</text>
       </g>
+      <g id="gap2" class="fade off">
+        <rect x="972" y="150" width="200" height="236" rx="12" fill="rgba(248,81,73,.30)" stroke="#F85149" stroke-width="3"/>
+        <text x="1072" y="190" text-anchor="middle" class="head" font-size="24">Lücke 2 von 2</text>
+        <text x="1072" y="222" text-anchor="middle" class="mono" font-size="14">CVE-2026-109619</text>
+        <text x="1072" y="266" text-anchor="middle" font-size="22" font-weight="700" fill="#F85149">Use-after-free</text>
+        <text x="1072" y="300" text-anchor="middle" font-size="14">Speicher wird benutzt,</text>
+        <text x="1072" y="320" text-anchor="middle" font-size="14">nachdem er schon</text>
+        <text x="1072" y="340" text-anchor="middle" font-size="14">freigegeben wurde.</text>
+      </g>
       <g id="res-ok" class="fade off">
         <rect x="976" y="80" width="192" height="80" rx="10" fill="rgba(88,166,255,.18)" stroke="#58A6FF" stroke-width="2"/>
         <text x="1072" y="112" text-anchor="middle" font-size="18" font-weight="700">Normale Antwort</text>
@@ -377,6 +388,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     <!-- Overlay: Lücke A -->
     <div class="overlay off" id="ov-table" aria-hidden="true">
       <div class="card">
+        <div class="gap-badge"><span class="gap-num">Lücke 1 von 2</span><span class="gap-id">CVE-2026-109618 · Speicherkorruption nach Out-of-Memory</span></div>
         <h3>Tabelle der Formularfelder im Moment des Abbruchs</h3>
         <span class="counter">Zähler: 3 Einträge</span>
         <table class="ht">
@@ -418,7 +430,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
             <h4 class="tag-grn">Was PHP geändert hat</h4>
             <ul>
               <li>Kein harter Sprung mehr: Bei Speichermangel stoppt PHP erst an einem sicheren Punkt.</li>
-              <li>Alle Merkzettel werden beim Ende und beim Start einer Anfrage zurückgesetzt.</li>
+              <li>Alle globalen Zeiger werden beim Ende und beim Start einer Anfrage zurückgesetzt.</li>
             </ul>
           </div>
           <div class="col">
@@ -487,24 +499,25 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     return t;
   }
 
-  // Merkzettel-Zeilen
+  // Zeilen der globalen Zeiger
   var ROWS = [
-    { key: "sid", y: 140, code: "PS(id)", label: "Session-ID" },
-    { key: "uns", y: 206, code: "BG(unserialize)", label: "Unserializer" },
-    { key: "bt",  y: 272, code: "EG(…backtrace)", label: "Fehler-Backtrace" }
+    { key: "sid", y: 142, code: "PS(id)", exp: "PS = PHP Session", label: "Session-ID" },
+    { key: "uns", y: 208, code: "BG(unserialize)", exp: "BG = Basic Globals", label: "Unserializer" },
+    { key: "bt",  y: 274, code: "EG(…backtrace)", exp: "EG = Executor Globals", label: "Fehler-Backtrace" }
   ];
   var rowsG = document.getElementById("rows");
   var dots = {};
   ROWS.forEach(function (r) {
-    el("rect", { x: 308, y: r.y - 24, width: 230, height: 48, rx: 8, "class": "box-2" }, rowsG);
-    txt(rowsG, 322, r.y - 3, r.code, { "class": "mono", "font-size": 15 });
-    txt(rowsG, 322, r.y + 16, r.label, { "class": "muted", "font-size": 14 });
+    el("rect", { x: 308, y: r.y - 29, width: 230, height: 58, rx: 8, "class": "box-2" }, rowsG);
+    txt(rowsG, 322, r.y - 10, r.code, { "class": "mono", "font-size": 14 });
+    txt(rowsG, 322, r.y + 6, r.exp, { "font-size": 12, fill: "#D29922" });
+    txt(rowsG, 322, r.y + 21, "→ " + r.label, { "class": "muted", "font-size": 12 });
     dots[r.key] = el("circle", { cx: 524, cy: r.y, r: 7, fill: "#30363D", "class": "dot" }, rowsG);
   });
 
   // Checkliste
   var checkG = document.getElementById("check");
-  var CHECK_ITEMS = ["1. Merkzettel löschen", "2. Speicher freigeben"];
+  var CHECK_ITEMS = ["1. Zeiger löschen", "2. Speicher freigeben"];
   var checkMarks = [];
   CHECK_ITEMS.forEach(function (s, i) {
     var y = 404 + i * 28;
@@ -550,6 +563,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
   var packetsG = document.getElementById("packets");
   var res = {
     none: document.getElementById("res-none"),
+    gap2: document.getElementById("gap2"),
     ok: document.getElementById("res-ok"),
     leak: document.getElementById("res-leak"),
     shell: document.getElementById("res-shell")
@@ -605,14 +619,14 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Einführung",
       title: "Wie aus einer Anfrage eine Shell wird",
-      text: "Links schicken ein Besucher und ein Angreifer Anfragen. In der Mitte arbeitet ein PHP-Worker: ein Prozess, der viele Anfragen nacheinander bearbeitet. Er hat einen Merkzettel und für jede Anfrage einen Speicherbereich.",
-      bild: "Stellt euch den Worker als Hotel vor: Anfragen sind Gäste, der Speicher sind die Zimmer, der Merkzettel ist das Buch an der Rezeption.",
+      text: "Links schicken ein Besucher und ein Angreifer Anfragen. In der Mitte arbeitet ein PHP-Worker: ein Prozess, der viele Anfragen nacheinander bearbeitet. Er hat globale Zeiger, die festhalten, wo Daten liegen, und für jede Anfrage einen Speicherbereich.",
+      bild: "Stellt euch den Worker als Hotel vor: Anfragen sind Gäste, der Speicher sind die Zimmer, die globalen Zeiger sind das Buch an der Rezeption.",
       state: function (s) { return s; }
     },
     {
       kicker: "Normalfall · 1 von 2",
       title: "Eine normale Anfrage kommt an",
-      text: "PHP legt im Speicher an, was die Anfrage braucht, und notiert sich auf dem Merkzettel, wo es liegt, zum Beispiel die Session-ID.",
+      text: "PHP legt im Speicher an, was die Anfrage braucht, und hält in den globalen Zeigern fest, wo es liegt, zum Beispiel die Session-ID.",
       bild: "Ein Gast checkt ein. Die Rezeption schreibt ins Buch: Gast Müller, Zimmer 5.",
       state: function (s) {
         fill(s.cells, 0, 9, "user");
@@ -625,7 +639,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Normalfall · 2 von 2",
       title: "Am Ende wird sauber aufgeräumt",
-      text: "Die Antwort geht raus. Dann löscht PHP die Einträge auf dem Merkzettel und gibt den Speicher frei. Die nächste Anfrage startet mit leerem Zettel.",
+      text: "Die Antwort geht raus. Dann löscht PHP die globalen Zeiger und gibt den Speicher frei. Die nächste Anfrage startet sauber.",
       bild: "Beim Check-out wird erst der Eintrag im Buch gestrichen, dann wird das Zimmer geputzt.",
       state: function (s) {
         s.check = "done";
@@ -637,7 +651,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Angriff · Schritt 1",
       title: "Der Angreifer schickt einen präparierten Upload",
-      text: "Ein riesiger, verschachtelter Datei-Upload. PHP verarbeitet ihn, noch bevor der Code der Website überhaupt startet. Die Upload-Fortschrittsanzeige legt dabei schon früh eine Session-ID an.",
+      text: "Jede Website ist öffentlich: Jeder kann ihr Anfragen schicken. Der Angreifer baut mit einem Skript einen riesigen, verschachtelten Datei-Upload und schickt ihn an irgendeine PHP-Seite. PHP liest ihn automatisch ein, bevor die Website startet – ohne Formular, ohne Login.",
       bild: "Ein Gast kommt mit so viel Gepäck an, dass das Hotel aus allen Nähten platzt.",
       chain: 1,
       state: function (s) {
@@ -651,7 +665,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Angriff · Schritt 2",
       title: "Speicher voll: PHP bricht hart ab",
-      text: "Das memory_limit ist erreicht. PHP springt sofort ans Ende der Anfrage und überspringt dabei das Aufräumen. Der Speicher wird freigegeben, der Merkzettel aber nicht gelöscht. Seine Zeiger zeigen jetzt ins Leere.",
+      text: "Das memory_limit ist erreicht. PHP springt sofort ans Ende der Anfrage und überspringt dabei das Aufräumen. Der Speicher wird freigegeben, die globalen Zeiger aber nicht gelöscht. Sie zeigen jetzt ins Leere.",
       bild: "Feueralarm: Der Gast fliegt raus, das Zimmer wird freigegeben. Im Rezeptionsbuch steht aber noch seine Zimmernummer.",
       chain: 2,
       state: function (s) {
@@ -664,8 +678,8 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       }
     },
     {
-      kicker: "Lücke A · CVE-2026-109618",
-      title: "Eine halb fertige Tabelle",
+      kicker: "Lücke 1 von 2 · CVE-2026-109618",
+      title: "Lücke 1: Eine halb fertige Tabelle",
       text: "Der Speicher ging mitten im Eintragen eines Formularfelds aus. Der Zähler sagt drei Einträge, geschrieben wurden nur zwei. PHP behandelt das leere dritte Fach trotzdem wie einen echten Wert.",
       bild: "Auf der Gepäckliste stehen drei Koffer, abgegeben wurden zwei. Der Page holt trotzdem einen dritten aus dem Fach, und den hat der Angreifer hingestellt.",
       chain: 2,
@@ -679,9 +693,9 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
       }
     },
     {
-      kicker: "Lücke B · CVE-2026-109619",
-      title: "Alte Zeiger, neue Daten",
-      text: "Die nächste Anfrage des Angreifers landet im selben Worker. Ihr Speicher liegt genau dort, wo vorher die alten Daten waren. Der Merkzettel zeigt jetzt auf Daten des Angreifers, und PHP hält sie für echt.",
+      kicker: "Lücke 2 von 2 · CVE-2026-109619 · Use-after-free",
+      title: "Lücke 2: Alte Zeiger, neue Daten",
+      text: "Die nächste Anfrage des Angreifers landet im selben Worker und bekommt genau den frei gewordenen Speicher. Die alten Zeiger zeigen jetzt auf Daten des Angreifers, und PHP hält sie für echt. Das heißt Use-after-free: Speicher wird benutzt, nachdem er freigegeben wurde.",
       bild: "Ein neuer Gast zieht ins Zimmer. Die Rezeption glaubt noch, es sei das Zimmer des alten Gastes.",
       chain: 3,
       state: function (s) {
@@ -691,6 +705,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
         s.mem = 0.55; s.memKind = "atk";
         s.check = "skipped";
         s.packets = [["atk", "nächste Anfrage", "in"]];
+        s.gap2 = true;
         return s;
       }
     },
@@ -748,7 +763,7 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     {
       kicker: "Der Fix",
       title: "Was PHP geändert hat und was Admins tun müssen",
-      text: "Seit den Versionen vom 21. Oktober bricht PHP nicht mehr mitten im Satz ab, und alle Merkzettel werden zuverlässig zurückgesetzt.",
+      text: "Seit den Versionen vom 21. Oktober bricht PHP nicht mehr mitten im Satz ab, und alle globalen Zeiger werden zuverlässig zurückgesetzt.",
       bild: "Neue Hausregel: Auch beim Feueralarm wird das Buch sofort aktualisiert.",
       fixed: true,
       state: function (s) {
@@ -852,7 +867,8 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     oom.setAttribute("class", "fade" + (s.oom ? (animate ? " oom" : "") : " off"));
 
     // Ergebnis rechts
-    res.none.setAttribute("class", "fade" + (s.res === "none" ? "" : " off"));
+    res.none.setAttribute("class", "fade" + (s.res === "none" && !s.gap2 ? "" : " off"));
+    res.gap2.setAttribute("class", "fade" + (s.gap2 ? "" : " off"));
     res.ok.setAttribute("class", "fade" + (s.res === "ok" ? "" : " off"));
     res.leak.setAttribute("class", "fade" + (s.res === "leak" || s.res === "shell" ? "" : " off"));
     res.shell.setAttribute("class", "fade" + (s.res === "shell" ? "" : " off"));

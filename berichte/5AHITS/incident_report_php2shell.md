@@ -106,4 +106,4 @@ Weil die Lücke Speicher mit Passwörtern und Tokens nach außen leakt. Diese Zu
 ## 11. KI-Unterstützung
 
 > - **Verwendetes Modell:** Claude (Anthropic), Modell: Opus 5.5
-> - **Anteil:** Powerpointentwurf- und design, die interaktive Animation und die Demo wurden mit KI-Unterstützung erstellt.  Recherche, Gliederung und Faktenprüfung sind Eigenleistung.
+> - **Anteil:** Powerpointentwurf- und design + die interaktive Animation wurden mit KI-Unterstützung erstellt.  Recherche, Gliederung und Faktenprüfung sind Eigenleistung.

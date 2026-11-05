@@ -86,8 +86,8 @@ Die Lücke liegt in PHP selbst und wird ausgelöst, bevor der Website-Code läuf
 **2. Was ist die gemeinsame Ursache der beiden CVEs?**
 Bei Speichermangel bricht PHP hart ab und überspringt das Aufräumen. Zurück bleiben eine halb fertige Tabelle (109618) bzw. Zeiger auf freigegebenen Speicher (109619).
 
-**3. Was muss ein Admin nach dem Patch zusätzlich tun?**
-Alle PHP-Worker neu starten, Zugangsdaten und Tokens tauschen und die Logs rückwirkend auf Angriffe prüfen.
+**3. Warum reicht es nicht, nur den Patch einzuspielen?**
+Weil die Lücke Speicher mit Passwörtern und Tokens nach außen leakt. Diese Zugangsdaten könnten schon vor dem Patch abgeflossen sein. Deshalb muss man zusätzlich die Zugangsdaten tauschen und die Logs rückwirkend prüfen.
 
 ## 10. Quellen
 

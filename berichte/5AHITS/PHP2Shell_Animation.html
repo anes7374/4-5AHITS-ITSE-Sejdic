@@ -119,8 +119,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 .cell.s-freed { fill: transparent; stroke: var(--muted); stroke-dasharray: 5 5; }
 .cell.s-php   { fill: #3A3F4B; stroke: #C9D1D9; }
 .cell.s-evil  { fill: var(--red-strong); stroke: var(--red); }
-.etk { fill: #3A3F4B; stroke: #C9D1D9; stroke-width: 1; transition: opacity .45s; }
-.etk.off { opacity: 0; }
 .cell.s-tbl { fill: #3A3F4B; stroke: #D29922; stroke-width: 4; }
 #tbl.play .tr { animation: fin .45s ease-out both; }
 #tbl.play #tr1 { animation-delay: .5s; }
@@ -708,12 +706,6 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
     var p = cellPos(i);
     cells.push(el("rect", { x: p.x, y: p.y, width: p.w, height: p.h, rx: 6, "class": "cell s-empty" }, cellsG));
   }
-  // Etiketten: PHP schreibt vor jeden Wert eigene Verwaltungsdaten
-  var tags = [];
-  for (var i = 0; i < 20; i++) {
-    var p = cellPos(i);
-    tags.push(el("rect", { x: p.x + 2, y: p.y + 2, width: p.w - 4, height: 11, rx: 4, "class": "etk off" }, cellsG));
-  }
 
   // Zeiger
   var ptrG = document.getElementById("ptrs");
@@ -1015,17 +1007,11 @@ svg .head { font-family: var(--f-head); font-weight: 700; }
 
     // Zellen
     var growing = s.cells.filter(function (c) { return c === "atk" || c === "user" || c === "evil"; }).length;
-    // Wo alte Zeiger hinzeigen, liest PHP die Angreifer-Bytes selbst als Etikett
-    var noTag = {};
-    Object.keys(s.ptr).forEach(function (k) { if (s.ptr[k] === "evil" || s.ptr[k] === "hot") noTag[TARGET[k]] = true; });
     for (var j = 0; j < 20; j++) {
       var c = cells[j];
       var cls = "cell s-" + s.cells[j] + (s.pulse && s.cells[j] === "evil" ? " pulse" : "");
       c.style.transitionDelay = animate && s.cells[j] !== "empty" && s.cells[j] !== "freed" ? (300 + j * 55) + "ms" : (animate && s.cells[j] === "freed" ? (j * 25) + "ms" : "0ms");
       c.setAttribute("class", cls);
-      var t = tags[j], hasTag = (s.cells[j] === "user" || s.cells[j] === "atk" || s.cells[j] === "evil") && !(s.cells[j] === "evil" && noTag[j]);
-      t.style.transitionDelay = c.style.transitionDelay;
-      t.setAttribute("class", "etk" + (hasTag ? "" : " off"));
     }
 
     // Zeiger
